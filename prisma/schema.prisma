@@ -1,0 +1,402 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+
+model User {
+  id            String    @id
+  name          String
+  email         String
+  emailVerified Boolean
+  image         String?
+  createdAt     DateTime
+  updatedAt     DateTime
+  sessions      Session[]
+  accounts      Account[]
+
+  shop          Shop?
+  subscription  Subscription?
+  @@unique([email])
+  @@map("user")
+}
+
+model Session {
+  id        String   @id
+  expiresAt DateTime
+  token     String
+  createdAt DateTime
+  updatedAt DateTime
+  ipAddress String?
+  userAgent String?
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([token])
+  @@map("session")
+}
+
+model Account {
+  id                    String    @id
+  accountId             String
+  providerId            String
+  userId                String
+  user                  User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  accessToken           String?
+  refreshToken          String?
+  idToken               String?
+  accessTokenExpiresAt  DateTime?
+  refreshTokenExpiresAt DateTime?
+  scope                 String?
+  password              String?
+  createdAt             DateTime
+  updatedAt             DateTime
+
+  @@map("account")
+}
+
+model Verification {
+  id         String   @id
+  identifier String
+  value      String
+  expiresAt  DateTime
+  createdAt  DateTime?
+  updatedAt  DateTime?
+
+  @@map("verification")
+}
+
+model Shop {
+  id          String   @id @default(cuid())
+  userId      String   @unique
+  name        String
+  slug        String   @unique
+  description String?
+  logoUrl     String?
+  phone       String?
+  whatsapp    String?
+  address     String?
+  city        String?
+  currency    Currency @default(CDF)
+  isPublic    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  categories  Category[]
+  products    Product[]
+  customers   Customer[]
+  orders      Order[]
+  sales       Sale[]
+  invoices    Invoice[]
+  shopMembers ShopMember[]
+
+  @@map("shop")
+}
+
+// Plan Pro uniquement
+model ShopMember {
+  id        String     @id @default(cuid())
+  shopId    String
+  userId    String
+  role      MemberRole @default(CASHIER)
+  createdAt DateTime   @default(now())
+
+  shop      Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+
+  @@unique([shopId, userId])
+  @@map("shop_member")
+}
+
+model Category {
+  id        String    @id @default(cuid())
+  shopId    String
+  name      String
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+
+  shop      Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  products  Product[]
+
+  @@map("category")
+}
+
+model Product {
+  id            String   @id @default(cuid())
+  shopId        String
+  categoryId    String?
+  name          String
+  description   String?
+  sellingPrice  Decimal  @db.Decimal(12, 2)
+  purchasePrice Decimal? @db.Decimal(12, 2)
+  stock         Int      @default(0)
+  lowStockAlert Int      @default(5)
+  unit          String?
+  isArchived    Boolean  @default(false)
+  isPublic      Boolean  @default(true)
+  shareableLink String?  @unique
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+
+  shop         Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  category     Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  saleItems    SaleItem[]
+  orderItems   OrderItem[]
+  invoiceItems InvoiceItem[]
+  images       ProductImage[]
+
+  @@map("product")
+}
+
+model ProductImage {
+  id        String   @id @default(uuid())
+  key       String
+  url       String
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@map("product_image")
+}
+
+model Customer {
+  id        String   @id @default(cuid())
+  shopId    String
+  name      String
+  phone     String?
+  whatsapp  String?
+  address   String?
+  note      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  shop     Shop      @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  orders   Order[]
+  sales    Sale[]
+  invoices Invoice[]
+
+  @@map("customer")
+}
+
+model Order {
+  id          String      @id @default(cuid())
+  shopId      String
+  customerId  String?
+  status      OrderStatus @default(PENDING)
+  note        String?
+  totalAmount Decimal     @db.Decimal(12, 2)
+  currency    Currency    @default(CDF)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  shop     Shop        @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer Customer?   @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  items    OrderItem[]
+  sale     Sale?
+  invoice  Invoice?
+
+  @@map("order")
+}
+
+model OrderItem {
+  id         String  @id @default(cuid())
+  orderId    String
+  productId  String
+  quantity   Int
+  unitPrice  Decimal @db.Decimal(12, 2)
+  totalPrice Decimal @db.Decimal(12, 2)
+
+  order   Order   @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("order_item")
+}
+
+model Sale {
+  id            String        @id @default(cuid())
+  shopId        String
+  customerId    String?
+  orderId       String?       @unique
+  paymentMethod PaymentMethod @default(CASH)
+  note          String?
+  totalAmount   Decimal       @db.Decimal(12, 2)
+  totalCost     Decimal?      @db.Decimal(12, 2)
+  profit        Decimal?      @db.Decimal(12, 2)
+  currency      Currency      @default(CDF)
+  soldAt        DateTime      @default(now())
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  shop     Shop       @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer Customer?  @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  order    Order?     @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  items    SaleItem[]
+  invoice  Invoice?
+
+  @@map("sale")
+}
+
+model SaleItem {
+  id         String   @id @default(cuid())
+  saleId     String
+  productId  String
+  quantity   Int
+  unitPrice  Decimal  @db.Decimal(12, 2)
+  unitCost   Decimal? @db.Decimal(12, 2)
+  totalPrice Decimal  @db.Decimal(12, 2)
+  totalCost  Decimal? @db.Decimal(12, 2)
+
+  sale    Sale    @relation(fields: [saleId], references: [id], onDelete: Cascade)
+  product Product @relation(fields: [productId], references: [id], onDelete: Restrict)
+
+  @@map("sale_item")
+}
+
+model Invoice {
+  id            String        @id @default(cuid())
+  shopId        String
+  customerId    String?
+  saleId        String?       @unique
+  orderId       String?       @unique
+  invoiceNumber String        @unique  // Auto : INV-0001
+  status        InvoiceStatus @default(DRAFT)
+  totalAmount   Decimal       @db.Decimal(12, 2)
+  currency      Currency      @default(CDF)
+  note          String?
+  pdfUrl        String?                // Cloudflare R2
+  issuedAt      DateTime      @default(now())
+  dueAt         DateTime?
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+
+  shop     Shop          @relation(fields: [shopId], references: [id], onDelete: Cascade)
+  customer Customer?     @relation(fields: [customerId], references: [id], onDelete: SetNull)
+  sale     Sale?         @relation(fields: [saleId], references: [id], onDelete: SetNull)
+  order    Order?        @relation(fields: [orderId], references: [id], onDelete: SetNull)
+  items    InvoiceItem[]
+
+  @@map("invoice")
+}
+
+model InvoiceItem {
+  id         String   @id @default(cuid())
+  invoiceId  String
+  productId  String?
+  label      String   // Dénormalisé — conservé si le produit est supprimé
+  quantity   Int
+  unitPrice  Decimal  @db.Decimal(12, 2)
+  totalPrice Decimal  @db.Decimal(12, 2)
+
+  invoice Invoice  @relation(fields: [invoiceId], references: [id], onDelete: Cascade)
+  product Product? @relation(fields: [productId], references: [id], onDelete: SetNull)
+
+  @@map("invoice_item")
+}
+
+model Plan {
+  id               String   @id @default(cuid())
+  name             String   @unique  // FREE | STANDARD | PRO
+  displayName      String
+  priceUsd         Decimal  @db.Decimal(8, 2)
+  priceCdf         Decimal  @db.Decimal(12, 2)
+  hasInvoicing     Boolean  @default(false)
+  hasAdvancedStats Boolean  @default(false)
+  hasMultiUser     Boolean  @default(false)
+  hasExport        Boolean  @default(false)
+  isActive         Boolean  @default(true)
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime @updatedAt
+
+  subscriptions Subscription[]
+
+  @@map("plan")
+}
+
+model Subscription {
+  id                 String             @id @default(cuid())
+  userId             String             @unique
+  planId             String
+  status             SubscriptionStatus @default(ACTIVE)
+  paymentMethod      PaymentMethod?
+  currentPeriodStart DateTime           @default(now())
+  currentPeriodEnd   DateTime
+  canceledAt         DateTime?
+  createdAt          DateTime           @default(now())
+  updatedAt          DateTime           @updatedAt
+
+  user     User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan     Plan      @relation(fields: [planId], references: [id])
+  payments Payment[]
+
+  @@map("subscription")
+}
+
+model Payment {
+  id             String        @id @default(cuid())
+  subscriptionId String
+  amount         Decimal       @db.Decimal(12, 2)
+  currency       Currency      @default(CDF)
+  method         PaymentMethod
+  status         PaymentStatus @default(PENDING)
+  reference      String?       // Référence Mobile Money
+  paidAt         DateTime?
+  createdAt      DateTime      @default(now())
+
+  subscription Subscription @relation(fields: [subscriptionId], references: [id], onDelete: Cascade)
+
+  @@map("payment")
+}
+
+enum Currency {
+  CDF
+  USD
+}
+
+enum MemberRole {
+  OWNER
+  CASHIER
+  VIEWER
+}
+
+enum OrderStatus {
+  PENDING      // Reçue
+  CONFIRMED    // Confirmée
+  DELIVERED    // Livrée
+  PAID         // Payée
+  CANCELLED    // Annulée
+}
+
+enum PaymentMethod {
+  CASH
+  MOBILE_MONEY
+  BANK_TRANSFER
+  OTHER
+}
+
+enum InvoiceStatus {
+  DRAFT
+  SENT
+  PAID
+  CANCELLED
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELLED
+  EXPIRED
+}
+
+enum PaymentStatus {
+  PENDING
+  COMPLETED
+  FAILED
+  REFUNDED
+}
