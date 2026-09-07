@@ -5,7 +5,6 @@ import Image from "next/image";
 import { ArrowLeft, Pencil, ShoppingCart, Package, Trash2, ChevronRight } from "lucide-react";
 import { notFound, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { getPublicUrl } from "@/lib/storage-actions";
 import { formatCurrency } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
 import { ProductWithSales } from "@/types";
@@ -108,7 +107,7 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
                     <div className="w-14 h-14 rounded-lg border border-gray-200 bg-white overflow-hidden relative shrink-0">
                         {product.images[0]?.key ? (
                             <Image
-                                src={getPublicUrl(product.images[0].key)}
+                                src={`/api/images/${product.images[0].key}`}
                                 alt={product.name}
                                 fill
                                 className="object-cover"
@@ -173,7 +172,7 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
                     <div className="rounded-lg border border-gray-200 bg-white overflow-hidden aspect-square relative group">
                         {product.images[0]?.key ? (
                             <Image
-                                src={getPublicUrl(product.images[0].key)}
+                                src={`/api/images/${product.images[0].key}`}
                                 alt={product.name}
                                 fill
                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
@@ -197,7 +196,7 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
                                     className="aspect-square relative border border-gray-200 rounded-md overflow-hidden bg-white cursor-pointer hover:border-gray-400 transition"
                                 >
                                     <Image
-                                        src={getPublicUrl(img.key)}
+                                        src={`/api/images/${img.key}`}
                                         alt={`${product.name} ${idx + 2}`}
                                         fill
                                         className="object-cover"

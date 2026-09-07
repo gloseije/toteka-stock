@@ -5,14 +5,13 @@ import {
     HeadBucketCommand,
 } from "@aws-sdk/client-s3";
 import { getSignedUrl } from "@aws-sdk/s3-request-presigner";
-import { r2, BUCKET_NAME } from "./r2";
+import { r2, BUCKET_NAME, isLocalStorage } from "./r2";
 
 /**
  * S'assure que le bucket existe (utile pour Rustfs en local)
  */
 async function ensureBucketExists() {
-    const isLocal = process.env.NODE_ENV === "development";
-    if (!isLocal) return;
+    if (!isLocalStorage) return;
 
     try {
         await r2.send(new HeadBucketCommand({ Bucket: BUCKET_NAME }));
@@ -64,9 +63,10 @@ export async function deleteFromR2(key: string) {
  * En prod R2, c'est généralement via un worker ou un domaine custom.
  */
 export function getPublicUrl(key: string) {
-    const isLocal = process.env.NODE_ENV === "development";
-    if (isLocal) {
-        // En local, on passe par notre proxy API pour éviter les 403 de Rustfs
+    // R2_ACCOUNT_ID est une variable serveur : absente dans les bundles
+    // client et non configurée tant qu'on tourne sur RustFS. Dans ces
+    // cas, on sert l'image via le proxy API (marche en dev et en prod local).
+    if (isLocalStorage) {
         return `/api/images/${key}`;
     }
 

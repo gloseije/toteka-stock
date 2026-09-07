@@ -1,7 +1,6 @@
 import Link from "next/link";
 import Image from "next/image";
 import { Package } from "lucide-react";
-import { getPublicUrl } from "@/lib/storage-actions";
 import { formatCurrency } from "@/lib/currency";
 
 interface Product {
@@ -38,7 +37,7 @@ export function ProductsGrid({ products }: ProductsGridProps) {
                         <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-gray-100 bg-gray-50">
                             {p.images[0]?.key ? (
                                 <Image
-                                    src={getPublicUrl(p.images[0].key)}
+                                    src={p.images[0].url ?? `/api/images/${p.images[0].key}`}
                                     alt={p.name}
                                     fill
                                     className="object-cover transition-transform duration-300 group-hover:scale-105"

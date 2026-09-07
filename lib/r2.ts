@@ -1,5 +1,11 @@
 import { S3Client } from "@aws-sdk/client-s3";
-const isLocal = process.env.NODE_ENV === "development";
+
+// Stockage local (RustFS) tant qu'aucun vrai compte R2 n'est configuré,
+// indépendamment de NODE_ENV — permet de tester `next start` en local.
+const accountId = process.env.R2_ACCOUNT_ID;
+export const isLocalStorage =
+    !accountId || accountId === "local_dummy_id";
+const isLocal = isLocalStorage;
 
 export const r2 = new S3Client({
     region: "auto",
