@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Image from "next/image";
 import {
     Package,
@@ -41,7 +40,7 @@ const features: Feature[] = [
     {
         Icon: Users,
         title: "Gestion des clients",
-        description: "Historique par client et relance WhatsApp depuis la fiche contact.",
+        description: "Historique des achats et informations client centralisées.",
     },
     {
         Icon: FileText,
@@ -51,7 +50,7 @@ const features: Feature[] = [
     {
         Icon: Share2,
         title: "Partage du catalogue",
-        description: "Envoyez votre catalogue ou un produit sur WhatsApp, Facebook ou Instagram.",
+        description: "Partagez votre catalogue ou un produit sur vos canaux de vente.",
     },
 ];
 
@@ -81,13 +80,10 @@ export default function Home() {
                         Gérez vos ventes comme un commerce structuré.
                     </h1>
                     <p className="mt-5 text-lg text-gray-300 max-w-xl leading-relaxed">
-                        Catalogue, stock, clients, factures\u00A0: tout depuis votre téléphone. Sans
+                        Catalogue, stock, clients, factures : tout depuis votre téléphone. Sans
                         changer votre façon de vendre.
                     </p>
                     <HeroCTA />
-                    <p className="mt-6 text-sm text-gray-400">
-                        Sans carte bancaire · Annulation à tout moment
-                    </p>
                 </div>
             </section>
 
@@ -96,8 +92,8 @@ export default function Home() {
                 <div className="max-w-6xl mx-auto grid lg:grid-cols-2 gap-16 items-center">
                     <div className="relative w-full rounded overflow-hidden aspect-3/2">
                         <Image
-                            src="/images/business-strategy.jpg"
-                            alt="Business strategy"
+                            src="/images/market.jpg"
+                            alt="Vendeuse dans un marché africain"
                             fill
                             loading="eager"
                             sizes="(max-width: 1024px) 100vw, 50vw"
@@ -110,12 +106,11 @@ export default function Home() {
                             Pourquoi Toteka
                         </p>
                         <h2 className="text-3xl font-bold leading-tight tracking-tight text-gray-900">
-                            WhatsApp Business ne gère pas votre commerce.
+                            Vos canaux de vente ne gèrent pas votre commerce.
                         </h2>
                         <p className="mt-4 text-base text-gray-600 leading-relaxed">
-                            En RDC, le e-commerce passe par WhatsApp. Les vendeurs gèrent tout
-                            mentalement\u00A0: stock, prix, dettes, relances. Toteka apporte de la
-                            structure sans rien changer à votre façon de vendre.
+                            Toteka réunit votre catalogue, votre stock, vos clients et vos ventes
+                            dans un même espace, quel que soit votre canal de vente.
                         </p>
                         <ul className="mt-8 flex flex-col gap-5">
                             {[
@@ -129,7 +124,7 @@ export default function Home() {
                                 ],
                                 [
                                     "Partage en 1 clic",
-                                    "Catalogue ou facture envoyé sur WhatsApp, Facebook, Instagram.",
+                                    "Catalogue ou facture partageable sur vos canaux de vente.",
                                 ],
                             ].map(([title, desc]) => (
                                 <li key={title} className="flex gap-3 items-start">
@@ -199,9 +194,10 @@ export default function Home() {
 
                     <div className="relative w-full rounded overflow-hidden aspect-4/3">
                         <Image
-                            src="/images/man-with-phone.jpg"
-                            alt="Application mobile"
+                            src="/images/seller.jpg"
+                            alt="Vendeur africain dans son commerce"
                             fill
+                            unoptimized
                             sizes="(max-width: 1024px) 100vw, 50vw"
                             className="object-cover"
                         />
@@ -213,13 +209,13 @@ export default function Home() {
             <PricingSection />
 
             {/* ── CTA ── */}
-            <section className="bg-purple-700 py-20 px-6">
+            <section className="bg-purple-900 py-20 px-6">
                 <div className="max-w-2xl mx-auto">
                     <h2 className="text-3xl font-bold leading-tight tracking-tight text-white">
                         Prêt à structurer votre activité ?
                     </h2>
                     <p className="mt-3 text-base text-purple-200 leading-relaxed">
-                        Rejoignez les vendeurs qui ont dit adieu au cahier et au stress du stock.
+                        Structurez votre activité sans changer votre façon de vendre.
                     </p>
                     <div className="flex flex-wrap gap-3 mt-8">
                         <AuthLink
@@ -229,16 +225,13 @@ export default function Home() {
                             Créer mon compte gratuitement
                         </AuthLink>
                         <AuthLink
+                            showButton={false}
                             href="/login"
                             className="text-sm font-semibold border border-purple-500 text-white px-5 py-2.5 rounded hover:border-purple-300 transition-colors"
-                            authenticatedText="Aller au tableau de bord"
                         >
                             Se connecter
                         </AuthLink>
                     </div>
-                    <p className="mt-5 text-xs text-purple-400">
-                        Sans carte bancaire · Sans engagement · 100% gratuit pour commencer
-                    </p>
                 </div>
             </section>
         </div>

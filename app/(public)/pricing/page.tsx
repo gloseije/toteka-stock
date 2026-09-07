@@ -1,19 +1,14 @@
 "use client";
 
-import { useState } from "react";
 import Link from "next/link";
 import { Check } from "lucide-react";
 
 import AuthLink from "@/components/auth-link";
-import CurrencyToggle from "@/components/currency-toggle";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
-type Currency = "USD" | "FC";
-
 interface Plan {
     name: string;
-    priceUSD: number;
     priceFC: number;
     period: string;
     description: string;
@@ -26,61 +21,50 @@ interface Plan {
 
 const plans: Plan[] = [
     {
-        name: "Gratuit",
-        priceUSD: 0,
+        name: "Essai gratuit",
         priceFC: 0,
-        period: "à vie",
-        description: "Pour tester et démarrer doucement votre activité.",
-        features: ["Jusqu'à 20 produits", "Tableau de bord du jour", "Lien boutique public"],
-        cta: "Commencer gratuitement",
+        period: "14 jours",
+        description:
+            "Accès à l'ensemble des fonctionnalités pendant 14 jours, sans limitation.",
+        features: [
+            "Produits et ventes illimités",
+            "Historique complet",
+            "Factures et reçus PDF",
+            "Alertes stock et statistiques",
+        ],
+        cta: "Commencer l'essai gratuit",
         href: "/register",
     },
     {
-        name: "Standard",
-        priceUSD: 2.2,
-        priceFC: 5000,
+        name: "Abonnement",
+        priceFC: 10000,
         period: "/ mois",
-        description: "L'essentiel pour gérer votre commerce au quotidien.",
+        description: "Pour continuer à utiliser Toteka après votre essai gratuit.",
         features: [
-            "Produits illimités",
+            "Produits et ventes illimités",
             "Historique complet",
-            "Gestion des clients",
-            "Factures PDF + alertes stock",
+            "Factures et reçus PDF",
+            "Alertes stock et statistiques avancées",
+            "Multi-utilisateurs et export en option",
         ],
-        cta: "Choisir Standard",
+        cta: "S'abonner",
         href: "/register",
         featured: true,
-        authenticatedHref: "/dashboard/subscription?plan=standard",
-    },
-    {
-        name: "Pro",
-        priceUSD: 5,
-        priceFC: 11250,
-        period: "/ mois",
-        description: "Pour les commerces en pleine expansion.",
-        features: [
-            "Tout du plan Standard",
-            "Multi-utilisateurs",
-            "Export Excel / CSV",
-            "Rapport mensuel",
-        ],
-        cta: "Choisir Pro",
-        href: "/register",
-        authenticatedHref: "/dashboard/subscription?plan=pro",
+        authenticatedHref: "/dashboard/subscription?plan=PRO",
     },
 ];
 
 const faq = [
     {
-        q: "Comment se passe le paiement\u00A0?",
+        q: "Comment fonctionne l'essai gratuit ?",
+        a: "Vous disposez de 14 jours pour utiliser l'ensemble des fonctionnalités de Toteka Stock, sans limitation. À la fin de l'essai, un abonnement actif est nécessaire pour continuer.",
+    },
+    {
+        q: "Comment se passe le paiement ?",
         a: "Nous acceptons les paiements par Mobile Money (M-Pesa, Orange Money, Airtel Money). Vous n'avez pas besoin de carte bancaire pour utiliser Toteka.",
     },
     {
-        q: "Puis-je changer de forfait plus tard\u00A0?",
-        a: "Oui, vous pouvez passer à un forfait supérieur ou inférieur à tout moment depuis vos paramètres. La différence sera calculée au prorata.",
-    },
-    {
-        q: "Y a-t-il des frais cachés\u00A0?",
+        q: "Y a-t-il des frais cachés ?",
         a: "Absolument aucun. Le prix affiché est celui que vous payez. Toutes les mises à jour sont incluses dans votre abonnement.",
     },
 ];
@@ -88,14 +72,7 @@ const faq = [
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
 export default function PricingPage() {
-    const [currency, setCurrency] = useState<Currency>("FC");
-
-    const formatPrice = (plan: Plan) => {
-        if (currency === "USD") {
-            return `${plan.priceUSD.toLocaleString("fr-FR")}\u00A0$`;
-        }
-        return `${plan.priceFC.toLocaleString("fr-FR")}\u00A0Fc`;
-    };
+    const formatPrice = (plan: Plan) => `${plan.priceFC.toLocaleString("fr-FR")} Fc`;
 
     return (
         <div className="min-h-screen bg-white">
@@ -109,8 +86,8 @@ export default function PricingPage() {
                         Un tarif simple et transparent
                     </h1>
                     <p className="text-base text-purple-300 max-w-xl leading-relaxed">
-                        Choisissez le plan qui correspond à la taille de votre commerce. Changez ou
-                        annulez à tout moment.
+                        14 jours d&apos;essai gratuit pour découvrir toutes les fonctionnalités, puis
+                        10 000 Fc par mois. Paiement par Mobile Money.
                     </p>
                 </div>
             </section>
@@ -118,9 +95,7 @@ export default function PricingPage() {
             {/* Plans */}
             <section className="py-20 px-6">
                 <div className="max-w-5xl mx-auto">
-                    <CurrencyToggle currency={currency} onChange={setCurrency} />
-
-                    <div className="grid md:grid-cols-3 gap-5">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
                         {plans.map((plan) => (
                             <div
                                 key={plan.name}
@@ -199,8 +174,7 @@ export default function PricingPage() {
 
                     {/* Paiement */}
                     <p className="text-xs text-gray-400 mt-6 text-center">
-                        Paiement par Mobile Money\u00A0: Airtel Money, Orange Money, M-Pesa. Aucun
-                        engagement.
+                        Paiement par Mobile Money : Airtel Money, Orange Money, M-Pesa.
                     </p>
                 </div>
             </section>

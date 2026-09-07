@@ -1,166 +1,250 @@
 import Link from "next/link";
-import { ArrowLeft, FileText, Share2, Pencil } from "lucide-react";
 import { notFound } from "next/navigation";
+import { prisma } from "@/lib/prisma";
+import { requireDashboardContext } from "@/lib/dashboard-guard";
+import { formatCurrency } from "@/lib/currency";
+import { formatDateTimeLong } from "@/lib/date";
+import type { SaleWithDetails, SerializedSale } from "@/types";
+import {
+    ArrowLeft,
+    Pencil,
+    Share2,
+    User,
+    CreditCard,
+    StickyNote,
+    Package,
+    TrendingUp,
+    TrendingDown,
+    Wallet,
+} from "lucide-react";
+import { InvoicePrintButton } from "@/components/invoice-print-button";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
-
-interface SaleLine {
-    productId: string;
-    productName: string;
-    unitPrice: number;
-    quantity: number;
-}
-
-interface Sale {
-    id: string;
-    createdAt: string;
-    lines: SaleLine[];
-    customerName: string | null;
-    paymentMethod: string;
-    note: string | null;
-    total: number;
-}
-
-// ─── Data ─────────────────────────────────────────────────────────────────────
-
-async function getSale(id: string): Promise<Sale | null> {
-    // TODO: GET /api/sales/:id
-    return null;
-}
-
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatDate(iso: string) {
-    return new Date(iso).toLocaleString("fr-FR", {
-        weekday: "long",
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-        hour: "2-digit",
-        minute: "2-digit",
+async function getSale(id: string): Promise<SaleWithDetails | null> {
+    const { shop } = await requireDashboardContext({ id: true });
+    return prisma.sale.findFirst({
+        where: { id, shopId: shop.id },
+        include: { customer: true, items: { include: { product: true } } },
     });
 }
 
-// ─── Page ─────────────────────────────────────────────────────────────────────
-
-export default async function SaleDetailPage({ params }: { params: { id: string } }) {
-    const sale = await getSale(params.id);
+export default async function SaleDetailPage(props: { params: Promise<{ id: string }> }) {
+    const sale = await getSale((await props.params).id);
     if (!sale) notFound();
 
-    return (
-        <div className="p-4 sm:p-6 lg:p-8 flex flex-col gap-6 max-w-7xl w-full">
-            {/* Back */}
-            <Link
-                href="/dashboard/sales"
-                className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors w-fit"
-            >
-                <ArrowLeft className="w-3.5 h-3.5" />
-                Ventes
-            </Link>
+    const currency = sale.items[0]?.currency ?? "CDF";
 
-            {/* Header */}
-            <div className="flex items-start justify-between gap-4">
+    // Conversion explicite des valeurs Decimal -> number
+    const totalAmount = Number(sale.totalAmount);
+    const totalCost = Number(sale.totalCost ?? 0);
+    const profit = Number(sale.profit ?? 0);
+    const isProfitPositive = profit >= 0;
+
+    // Conversion de l'objet sale pour le composant client (Decimal -> number)
+    const serializedSale: SerializedSale = {
+        ...sale,
+        totalAmount,
+        totalCost,
+        profit,
+        items: sale.items.map((item) => ({
+            ...item,
+            unitPrice: Number(item.unitPrice),
+            totalPrice: Number(item.totalPrice),
+            totalCost: item.totalCost !== null ? Number(item.totalCost) : null,
+            unitCost: item.unitCost !== null ? Number(item.unitCost) : null,
+            product: {
+                ...item.product,
+                sellingPrice: Number(item.product.sellingPrice),
+                purchasePrice: Number(item.product.purchasePrice),
+            },
+        })),
+    };
+
+    return (
+        <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6 lg:p-8">
+            {/* Fil d'Ariane */}
+            <nav className="flex items-center gap-1 text-sm text-gray-500">
+                <Link href="/dashboard" className="hover:text-purple-600 transition">
+                    Tableau de bord
+                </Link>
+                <span>/</span>
+                <Link href="/dashboard/sales" className="hover:text-purple-600 transition">
+                    Ventes
+                </Link>
+                <span>/</span>
+                <span className="text-purple-700 font-medium">
+                    #{sale.invoiceNumber || sale.id.slice(-6).toUpperCase()}
+                </span>
+            </nav>
+
+            {/* En-tête */}
+            <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-4">
                 <div>
-                    <h1 className="text-xl font-bold text-gray-900">
-                        Vente #{sale.id.slice(-6).toUpperCase()}
+                    <h1 className="text-2xl font-semibold text-gray-900">
+                        Vente{" "}
+                        <span className="text-purple-600">
+                            #{sale.invoiceNumber || sale.id.slice(-6).toUpperCase()}
+                        </span>
                     </h1>
-                    <p className="text-sm text-gray-400 mt-0.5">{formatDate(sale.createdAt)}</p>
+                    <p className="text-sm text-gray-500 mt-1">{formatDateTimeLong(sale.soldAt)}</p>
                 </div>
-                <div className="flex items-center gap-2 shrink-0">
+                <div className="flex flex-wrap items-center gap-2">
                     <Link
                         href={`/dashboard/sales/${sale.id}/edit`}
-                        className="flex items-center gap-1.5 text-sm font-medium border border-gray-200 text-gray-600 px-3 py-2 rounded hover:border-gray-300 hover:text-gray-900 transition-colors"
+                        className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:border-gray-300"
                     >
-                        <Pencil className="w-3.5 h-3.5" />
+                        <Pencil className="size-4" />
                         Modifier
                     </Link>
-                    <Link
-                        href={`/dashboard/invoices/new?sale=${sale.id}`}
-                        className="flex items-center gap-1.5 text-sm font-medium border border-gray-200 text-gray-600 px-3 py-2 rounded hover:border-gray-300 hover:text-gray-900 transition-colors"
-                    >
-                        <FileText className="w-3.5 h-3.5" />
-                        Créer une facture
-                    </Link>
-                    <button className="flex items-center gap-1.5 text-sm font-medium border border-gray-200 text-gray-600 px-3 py-2 rounded hover:border-gray-300 hover:text-gray-900 transition-colors">
-                        <Share2 className="w-3.5 h-3.5" />
+                    <InvoicePrintButton sale={serializedSale} />
+                    <button className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm font-medium text-gray-700 transition hover:bg-gray-50 hover:border-gray-300">
+                        <Share2 className="size-4" />
                         Partager
                     </button>
                 </div>
             </div>
 
-            {/* Lignes de produits */}
-            <div className="bg-white border border-gray-200 rounded overflow-hidden">
-                <div className="px-5 py-3 border-b border-gray-100">
-                    <p className="text-xs font-semibold text-gray-500">Produits</p>
+            {/* Infos client, paiement, note */}
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-3">
+                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <User className="size-4" />
+                        <span className="font-medium">Client</span>
+                    </div>
+                    <p className="mt-1 text-sm font-medium text-gray-900">
+                        {sale.customer?.name ?? "—"}
+                    </p>
                 </div>
-                <table className="w-full text-sm">
-                    <thead>
-                        <tr className="border-b border-gray-50">
-                            <th className="text-left text-xs text-gray-400 font-medium px-5 py-2.5">
-                                Produit
-                            </th>
-                            <th className="text-right text-xs text-gray-400 font-medium px-5 py-2.5">
-                                Qté
-                            </th>
-                            <th className="text-right text-xs text-gray-400 font-medium px-5 py-2.5">
-                                Prix unit.
-                            </th>
-                            <th className="text-right text-xs text-gray-400 font-medium px-5 py-2.5">
-                                Total
-                            </th>
-                        </tr>
-                    </thead>
-                    <tbody className="divide-y divide-gray-50">
-                        {sale.lines.map((line, i) => (
-                            <tr key={i}>
-                                <td className="px-5 py-3 text-gray-900">
-                                    <Link
-                                        href={`/dashboard/products/${line.productId}`}
-                                        className="hover:text-purple-700 transition-colors"
-                                    >
-                                        {line.productName}
-                                    </Link>
-                                </td>
-                                <td className="px-5 py-3 text-right text-gray-500">
-                                    {line.quantity}
-                                </td>
-                                <td className="px-5 py-3 text-right text-gray-500">
-                                    {line.unitPrice.toLocaleString("fr-FR")} Fc
-                                </td>
-                                <td className="px-5 py-3 text-right font-medium text-gray-900">
-                                    {(line.unitPrice * line.quantity).toLocaleString("fr-FR")} Fc
-                                </td>
-                            </tr>
-                        ))}
-                    </tbody>
-                    <tfoot>
-                        <tr className="border-t border-gray-100 bg-gray-50">
-                            <td
-                                colSpan={3}
-                                className="px-5 py-3 text-sm font-semibold text-gray-900 text-right"
-                            >
-                                Total
-                            </td>
-                            <td className="px-5 py-3 text-right text-sm font-bold text-gray-900">
-                                {sale.total.toLocaleString("fr-FR")} Fc
-                            </td>
-                        </tr>
-                    </tfoot>
-                </table>
+                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <CreditCard className="size-4" />
+                        <span className="font-medium">Paiement</span>
+                    </div>
+                    <p className="mt-1 text-sm font-medium text-gray-900">{sale.paymentMethod}</p>
+                </div>
+                <div className="rounded-lg border border-gray-200 bg-white p-4">
+                    <div className="flex items-center gap-2 text-sm text-gray-500">
+                        <Wallet className="size-4" />
+                        <span className="font-medium">Marge</span>
+                    </div>
+                    <div className={"mt-1 flex flex-row gap-2"}>
+                        {isProfitPositive ? (
+                            <TrendingUp className="size-4 inline text-green-600" />
+                        ) : (
+                            <TrendingDown className="size-4 inline text-red-600" />
+                        )}
+                        <span
+                            className={
+                                "text-sm font-medium" +
+                                (isProfitPositive ? " text-green-600" : " text-red-600")
+                            }
+                        >
+                            {formatCurrency(profit, currency)}
+                        </span>
+                    </div>
+                </div>
             </div>
 
-            {/* Infos complémentaires */}
-            <div className="bg-white border border-gray-200 rounded divide-y divide-gray-100">
-                {[
-                    ["Client", sale.customerName ?? "—"],
-                    ["Mode de paiement", sale.paymentMethod],
-                    ["Note", sale.note ?? "—"],
-                ].map(([key, val]) => (
-                    <div key={key} className="flex items-center justify-between px-5 py-3">
-                        <span className="text-xs text-gray-400">{key}</span>
-                        <span className="text-sm text-gray-900">{val}</span>
-                    </div>
-                ))}
+            {/* Tableau */}
+            <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
+                <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                        <thead className="bg-gray-50/80">
+                            <tr>
+                                <th className="px-5 py-3 text-left text-xs font-medium text-gray-500 uppercase">
+                                    Produit
+                                </th>
+                                <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                                    Qté
+                                </th>
+                                <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                                    Prix unit.
+                                </th>
+                                <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                                    Total
+                                </th>
+                                <th className="px-5 py-3 text-right text-xs font-medium text-gray-500 uppercase">
+                                    Coût
+                                </th>
+                            </tr>
+                        </thead>
+                        <tbody className="divide-y divide-gray-100">
+                            {sale.items.map((item) => {
+                                const unitPrice = Number(item.unitPrice);
+                                const totalPrice = Number(item.totalPrice);
+                                const totalCostItem =
+                                    item.totalCost !== null ? Number(item.totalCost) : null;
+                                return (
+                                    <tr key={item.id} className="transition hover:bg-purple-50/30">
+                                        <td className="px-5 py-3">
+                                            <Link
+                                                href={`/dashboard/products/${item.productId}`}
+                                                className="text-gray-900 hover:text-purple-700 transition"
+                                            >
+                                                <div className="flex items-center gap-2">
+                                                    <Package className="size-4 text-gray-400" />
+                                                    {item.product.name}
+                                                </div>
+                                            </Link>
+                                        </td>
+                                        <td className="px-5 py-3 text-right font-medium">
+                                            {item.quantity}
+                                        </td>
+                                        <td className="px-5 py-3 text-right text-gray-600">
+                                            {formatCurrency(unitPrice, item.currency)}
+                                        </td>
+                                        <td className="px-5 py-3 text-right font-semibold text-gray-900">
+                                            {formatCurrency(totalPrice, item.currency)}
+                                        </td>
+                                        <td className="px-5 py-3 text-right text-gray-600">
+                                            {totalCostItem === null
+                                                ? "—"
+                                                : formatCurrency(totalCostItem, item.currency)}
+                                        </td>
+                                    </tr>
+                                );
+                            })}
+                        </tbody>
+                        <tfoot className="border-t border-gray-200 bg-gray-50/50">
+                            <tr>
+                                <td
+                                    colSpan={3}
+                                    className="px-5 py-3 text-right text-sm font-medium text-gray-700"
+                                >
+                                    Total
+                                </td>
+                                <td className="px-5 py-3 text-right text-sm font-bold text-purple-700">
+                                    {formatCurrency(totalAmount, currency)}
+                                </td>
+                                <td className="px-5 py-3 text-right text-sm text-gray-600">
+                                    {formatCurrency(totalCost, currency)}
+                                </td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            </div>
+            <div className="rounded-lg border border-gray-200 bg-white  overflow-hidden">
+                <div className="border-b border-gray-100 px-5 py-3 bg-gray-50/50">
+                    <h2 className="text-xs font-bold text-gray-500 uppercase flex gap-2">
+                        <StickyNote className="size-4" /> Note
+                    </h2>
+                </div>
+                <div className="p-5">
+                    <p className="text-sm text-gray-600 italic">
+                        {sale.note ? `« ${sale.note} »` : "Aucune note."}
+                    </p>
+                </div>
+            </div>
+
+            {/* Retour */}
+            <div className="flex flex-wrap gap-3 pt-2 border-t border-gray-100">
+                <Link
+                    href="/dashboard/sales"
+                    className="inline-flex items-center gap-1.5 text-sm text-gray-500 hover:text-purple-600 transition"
+                >
+                    <ArrowLeft className="size-4" />
+                    Retour aux ventes
+                </Link>
             </div>
         </div>
     );

@@ -9,6 +9,7 @@ interface AuthLinkProps {
     children: React.ReactNode;
     authenticatedText?: string;
     authenticatedHref?: string;
+    showButton?: boolean;
 }
 
 /**
@@ -19,11 +20,12 @@ export default function AuthLink({
     className, 
     children, 
     authenticatedText = "Tableau de bord",
-    authenticatedHref = "/dashboard"
+    authenticatedHref = "/dashboard",
+    showButton = true,
 }: AuthLinkProps) {
     const { data: session } = authClient.useSession();
 
-    return (
+    return showButton && session && (
         <Link href={session ? authenticatedHref : href} className={className}>
             {session ? authenticatedText : children}
         </Link>

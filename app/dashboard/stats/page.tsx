@@ -1,163 +1,187 @@
-import {
-    BarChart3,
-    TrendingUp,
-    DollarSign,
-    Package,
-    ArrowUpRight,
-    ArrowDownRight,
-} from "lucide-react";
+"use client";
 
-// ─── Types ────────────────────────────────────────────────────────────────────
+import { useEffect, useState } from "react";
+import { BarChart3, DollarSign, Package, TrendingUp } from "lucide-react";
+import { formatCurrency, currencyLabel } from "@/lib/currency";
+import { Skeleton } from "@/components/skeleton";
 
-interface StatCardProps {
-    title: string;
-    value: string;
-    trend?: {
-        value: string;
-        positive: boolean;
-    };
-    Icon: typeof BarChart3;
-}
-
-interface TopProduct {
-    id: string;
-    name: string;
-    sales: number;
+type Currency = "CDF" | "USD";
+interface CurrencyTotal {
+    currency: Currency;
     revenue: number;
+    profit: number;
+}
+interface TopProduct {
+    productId: string;
+    name: string;
+    quantity: number;
+    revenue: number;
+    currency: Currency;
+}
+interface StatsData {
+    revenue: number;
+    profit: number;
+    salesCount: number;
+    topProducts: TopProduct[];
+    currencies: CurrencyTotal[];
 }
 
-// ─── Components ───────────────────────────────────────────────────────────────
-
-function StatCard({ title, value, trend, Icon }: StatCardProps) {
-    return (
-        <div className="bg-white border border-gray-200 rounded p-6 flex flex-col gap-4">
-            <div className="flex items-center justify-between">
-                <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                    {title}
-                </span>
-                <div className="p-2 bg-purple-50 text-purple-600 rounded">
-                    <Icon className="w-4 h-4" />
-                </div>
-            </div>
-            <div className="flex items-end justify-between">
-                <span className="text-2xl font-bold text-gray-900">{value}</span>
-                {trend && (
-                    <div
-                        className={`flex items-center gap-1 text-xs font-bold ${trend.positive ? "text-green-600" : "text-red-600"}`}
-                    >
-                        {trend.positive ? (
-                            <ArrowUpRight className="w-3 h-3" />
-                        ) : (
-                            <ArrowDownRight className="w-3 h-3" />
-                        )}
-                        {trend.value}
-                    </div>
-                )}
-            </div>
-        </div>
-    );
-}
-
-// ─── Page ─────────────────────────────────────────────────────────────────────
+const money = (amount: number, currency: Currency) => formatCurrency(amount, currency);
 
 export default function StatsPage() {
-    // Mock data
-    const stats = [
+    const [from, setFrom] = useState(() => {
+        const date = new Date();
+        date.setDate(date.getDate() - 30);
+        return date.toISOString().slice(0, 10);
+    });
+    const [to, setTo] = useState(() => new Date().toISOString().slice(0, 10));
+    const [data, setData] = useState<StatsData | null>(null);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState<string | null>(null);
+
+    useEffect(() => {
+        const load = async () => {
+            setLoading(true);
+            setError(null);
+            try {
+                const response = await fetch(
+                    `/api/dashboard/stats?from=${from}&to=${to}&groupBy=day`
+                );
+                if (!response.ok) {
+                    setError("Impossible de charger les statistiques");
+                    return;
+                }
+                setData((await response.json()) as StatsData);
+            } catch (cause: unknown) {
+                setError(cause instanceof Error ? cause.message : "Erreur serveur");
+            } finally {
+                setLoading(false);
+            }
+        };
+        void load();
+    }, [from, to]);
+
+    const currencyItems = data?.currencies ?? [];
+    const currencyCards = currencyItems.flatMap((item) => [
         {
-            title: "Chiffre d'affaires",
-            value: "2.450.000 Fc",
-            trend: { value: "12%", positive: true },
+            title: `Chiffre d'affaires (${currencyLabel(item.currency)})`,
+            value: money(item.revenue, item.currency),
             Icon: DollarSign,
         },
         {
-            title: "Bénéfice estimé",
-            value: "840.000 Fc",
-            trend: { value: "8%", positive: true },
+            title: `Bénéfice estimé (${currencyLabel(item.currency)})`,
+            value: money(item.profit, item.currency),
             Icon: TrendingUp,
         },
+    ]);
+    const cards = [
+        ...currencyCards,
+        { title: "Ventes enregistrées", value: String(data?.salesCount ?? 0), Icon: BarChart3 },
         {
-            title: "Commandes",
-            value: "124",
-            trend: { value: "5%", positive: false },
-            Icon: BarChart3,
+            title: "Produits vendus",
+            value: String(data?.topProducts.reduce((sum, item) => sum + item.quantity, 0) ?? 0),
+            Icon: Package,
         },
-        { title: "Produits vendus", value: "458", Icon: Package },
-    ];
-
-    const topProducts: TopProduct[] = [
-        { id: "1", name: "Produit A", sales: 145, revenue: 450000 },
-        { id: "2", name: "Produit B", sales: 98, revenue: 294000 },
-        { id: "3", name: "Produit C", sales: 84, revenue: 168000 },
-        { id: "4", name: "Produit D", sales: 72, revenue: 144000 },
-    ];
-
-    const evolutionData = [
-        { label: "Lun", value: 40 },
-        { label: "Mar", value: 65 },
-        { label: "Mer", value: 45 },
-        { label: "Jeu", value: 80 },
-        { label: "Ven", value: 55 },
-        { label: "Sam", value: 90 },
-        { label: "Dim", value: 70 },
     ];
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 flex flex-col gap-8 max-w-7xl w-full">
-            {/* Header */}
-            <div>
-                <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Statistiques</h1>
-                <p className="text-sm text-gray-500 mt-1">
-                    Aperçu des performances sur les 30 derniers jours.
-                </p>
+            <div className="flex flex-col sm:flex-row sm:items-end justify-between gap-4">
+                <div>
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Statistiques</h1>
+                    <p className="text-sm text-gray-500 mt-1">
+                        Analysez vos ventes sur la période choisie.
+                    </p>
+                </div>
+                <div className="flex items-center gap-3 text-sm">
+                    <label className="text-gray-500">
+                        Du{" "}
+                        <input
+                            type="date"
+                            value={from}
+                            onChange={(event) => setFrom(event.target.value)}
+                            className="border border-gray-200 rounded px-2 py-1.5"
+                        />
+                    </label>
+                    <label className="text-gray-500">
+                        au{" "}
+                        <input
+                            type="date"
+                            value={to}
+                            onChange={(event) => setTo(event.target.value)}
+                            className="border border-gray-200 rounded px-2 py-1.5"
+                        />
+                    </label>
+                </div>
             </div>
-
-            {/* Grid Stats */}
+            {error && <p className="text-sm text-red-600">{error}</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {stats.map((s, i) => (
-                    <StatCard key={i} {...s} />
+                {cards.map(({ title, value, Icon }) => (
+                    <div
+                        key={title}
+                        className="bg-white border border-gray-200 rounded p-6 flex flex-col gap-4 min-w-0"
+                    >
+                        <div className="flex items-center justify-between">
+                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                {title}
+                            </span>
+                            <Icon className="w-4 h-4 text-purple-600" />
+                        </div>
+                        <span className="text-xl font-bold text-gray-900 wrap-break-word">
+                            {loading ? <Skeleton className="h-7 w-24" /> : value}
+                        </span>
+                    </div>
                 ))}
             </div>
-
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-                {/* Evolution Chart (Custom CSS) */}
-                <div className="lg:col-span-2 bg-white border border-gray-200 rounded p-6 flex flex-col gap-6">
-                    <h2 className="text-sm font-bold text-gray-900">Évolution des ventes</h2>
-                    <div className="h-64 flex items-end justify-between gap-2 px-2">
-                        {evolutionData.map((d, i) => (
-                            <div key={i} className="flex-1 flex flex-col items-center gap-3">
-                                <div
-                                    className="w-full max-w-10 bg-purple-600 rounded-t transition-all duration-500 hover:bg-purple-700"
-                                    style={{ height: `${d.value}%` }}
-                                />
-                                <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">
-                                    {d.label}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
+                <div className="bg-white border border-gray-200 rounded p-6">
+                    <h2 className="text-sm font-bold text-gray-900 mb-5">Répartition par devise</h2>
+                    {data?.currencies.length ? (
+                        data.currencies.map((item) => (
+                            <div
+                                key={item.currency}
+                                className="flex items-center justify-between border-b border-gray-50 py-3 last:border-0"
+                            >
+                                <span className="text-sm font-semibold text-gray-700">
+                                    {currencyLabel(item.currency)}
+                                </span>
+                                <span className="text-sm font-bold text-gray-900">
+                                    {money(item.revenue, item.currency)}
                                 </span>
                             </div>
-                        ))}
-                    </div>
+                        ))
+                    ) : (
+                        <p className="text-sm text-gray-500">Aucune vente sur cette période.</p>
+                    )}
                 </div>
-
-                {/* Top Products */}
-                <div className="bg-white border border-gray-200 rounded p-6 flex flex-col gap-6">
-                    <h2 className="text-sm font-bold text-gray-900">Top Produits</h2>
-                    <div className="flex flex-col gap-4">
-                        {topProducts.map((p) => (
+                <div className="bg-white border border-gray-200 rounded p-6">
+                    <h2 className="text-sm font-bold text-gray-900 mb-5">
+                        Produits les plus vendus
+                    </h2>
+                    {data?.topProducts.length ? (
+                        data.topProducts.map((item) => (
                             <div
-                                key={p.id}
-                                className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0"
+                                key={item.productId}
+                                className="flex items-center justify-between border-gray-50 py-3 not-last:border-b"
                             >
-                                <div className="flex flex-col gap-0.5">
-                                    <span className="text-sm font-semibold text-gray-900">
-                                        {p.name}
-                                    </span>
-                                    <span className="text-xs text-gray-500">{p.sales} ventes</span>
+                                <div>
+                                    <p className="text-sm font-semibold text-gray-900">
+                                        {item.name}
+                                    </p>
+                                    <p className="text-xs text-gray-500">
+                                        {item.quantity} unité{item.quantity > 1 ? "s" : ""}
+                                    </p>
                                 </div>
                                 <span className="text-sm font-bold text-gray-900">
-                                    {p.revenue.toLocaleString("fr-FR")} Fc
+                                    {money(item.revenue, item.currency)}
                                 </span>
                             </div>
-                        ))}
-                    </div>
+                        ))
+                    ) : (
+                        <p className="text-sm text-gray-500">
+                            Aucun produit vendu sur cette période.
+                        </p>
+                    )}
                 </div>
             </div>
         </div>

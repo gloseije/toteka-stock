@@ -1,4 +1,5 @@
 <!-- BEGIN:nextjs-agent-rules -->
+
 # This is NOT the Next.js you know
 
 This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` before writing any code. Heed deprecation notices.
@@ -77,8 +78,7 @@ Elles ont priorité sur toute suggestion esthétique générique.
 
 ## Typographie française
 
-- **Pas de longs tirets** (—, em dash) dans les textes : utiliser le deux-points (` : `) ou reformuler
-- Espaces insécables avant ` :`, ` ;`, ` !`, ` ?` (`&nbsp;` en HTML ou `\u00A0` en JS)
+- **Pas de longs tirets** (—, em dash) dans les textes : utiliser le deux-points (`:`) ou reformuler
 
 ---
 

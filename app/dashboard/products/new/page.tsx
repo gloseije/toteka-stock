@@ -9,14 +9,28 @@ export default function ProductNewPage() {
     const router = useRouter();
 
     const handleSubmit = async (values: ProductValues) => {
-        // TODO: POST /api/products
-        console.log("create product", values);
-        router.push("/dashboard/products");
+        try {
+            const res = await fetch("/api/products", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(values),
+            });
+
+            if (res.ok) {
+                router.push("/dashboard/products");
+                router.refresh();
+            } else {
+                alert("Erreur lors de la création du produit");
+            }
+        } catch (error) {
+            console.error(error);
+            alert("Erreur serveur");
+        }
     };
 
     return (
-        <div className="flex-1 flex items-start justify-center p-8">
-            <div className="w-full max-w-7xl bg-white border border-gray-200 rounded p-8 flex flex-col gap-6">
+        <div className="flex-1 flex items-start justify-center p-4 sm:p-8 min-w-0">
+            <div className="w-full max-w-7xl bg-white border border-gray-200 rounded p-4 sm:p-8 flex flex-col gap-6">
                 {/* Header */}
                 <div>
                     <Link

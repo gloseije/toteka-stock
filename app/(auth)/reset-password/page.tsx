@@ -2,6 +2,7 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { Loader2 } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
@@ -56,10 +57,12 @@ export default function ResetPasswordPage() {
             <div className="w-full max-w-sm bg-white border border-gray-200 rounded p-8 flex flex-col gap-7">
                 {/* Logo */}
                 <Link href="/" className="flex items-center gap-2 w-fit">
-                    <div className="w-7 h-7 bg-purple-600 rounded flex items-center justify-center text-white font-bold text-xs shrink-0">
-                        T
-                    </div>
-                    <span className="font-bold text-sm text-gray-900">Toteka Stock</span>
+                    <Image
+                        src="/toteka-stock-logo-primaire.svg"
+                        alt="Toteka Stock"
+                        width={160}
+                        height={50}
+                    />
                 </Link>
 
                 {/* Header */}

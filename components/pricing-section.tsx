@@ -1,17 +1,13 @@
 "use client";
 
-import { useState } from "react";
-import Link from "next/link";
+import { Check } from "lucide-react";
 import AuthLink from "@/components/auth-link";
-import CurrencyToggle from "@/components/currency-toggle";
-
-type Currency = "USD" | "FC";
 
 interface Plan {
     name: string;
-    priceUSD: number;
     priceFC: number;
     period: string;
+    description: string;
     subtextUSD?: string;
     subtextFC?: string;
     features: string[];
@@ -23,56 +19,41 @@ interface Plan {
 
 const plans: Plan[] = [
     {
-        name: "Gratuit",
-        priceUSD: 0,
+        name: "Essai gratuit",
         priceFC: 0,
-        period: "à vie",
-        features: ["Jusqu'à 20 produits", "Tableau de bord du jour", "Lien boutique public"],
-        cta: "Commencer",
+        period: "14 jours",
+        description:
+            "Accès à l'ensemble des fonctionnalités pendant 14 jours, sans limitation.",
+        features: [
+            "Produits et ventes illimités",
+            "Historique complet",
+            "Factures et reçus PDF",
+            "Alertes stock et statistiques",
+        ],
+        cta: "Commencer l'essai gratuit",
         href: "/register",
     },
     {
-        name: "Standard",
-        priceUSD: 2.2,
-        priceFC: 5000,
+        name: "Abonnement",
+        priceFC: 10000,
         period: "/ mois",
+        description: "Pour continuer à utiliser Toteka après votre essai gratuit.",
         features: [
-            "Produits illimités",
+            "Produits et ventes illimités",
             "Historique complet",
-            "Gestion des clients",
-            "Factures PDF + alertes stock",
+            "Factures et reçus PDF",
+            "Alertes stock et statistiques avancées",
+            "Multi-utilisateurs et export en option",
         ],
-        cta: "Choisir Standard",
+        cta: "S'abonner",
         href: "/register",
         featured: true,
-        authenticatedHref: "/dashboard/subscription?plan=standard",
-    },
-    {
-        name: "Pro",
-        priceUSD: 5,
-        priceFC: 11250,
-        period: "/ mois",
-        features: [
-            "Tout du Standard",
-            "Multi-utilisateurs",
-            "Export Excel / CSV",
-            "Rapport mensuel",
-        ],
-        cta: "Choisir Pro",
-        href: "/register",
-        authenticatedHref: "/dashboard/subscription?plan=pro",
+        authenticatedHref: "/dashboard/subscription?plan=PRO",
     },
 ];
 
 export default function PricingSection() {
-    const [currency, setCurrency] = useState<Currency>("FC");
-
-    const formatPrice = (plan: Plan) => {
-        if (currency === "USD") {
-            return `${plan.priceUSD.toLocaleString("fr-FR")}\u00A0$`;
-        }
-        return `${plan.priceFC.toLocaleString("fr-FR")}\u00A0Fc`;
-    };
+    const formatPrice = (plan: Plan) => `${plan.priceFC.toLocaleString("fr-FR")} Fc`;
 
     return (
         <section id="pricing" className="bg-gray-50 border-b border-gray-100 py-20 px-6">
@@ -85,57 +66,75 @@ export default function PricingSection() {
                         Pensés pour la RDC
                     </h2>
                     <p className="mt-3 text-base text-gray-500">
-                        Commencez gratuitement, évoluez quand vous êtes prêt.
+                        14 jours d&apos;essai gratuit, puis 10 000 Fc par mois.
                     </p>
                 </div>
 
-                <CurrencyToggle currency={currency} onChange={setCurrency} />
-
-                <div className="grid md:grid-cols-3 gap-4 max-w-3xl mx-auto">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-5 max-w-5xl mx-auto">
                     {plans.map((plan) => (
                         <div
                             key={plan.name}
-                            className={`bg-white border ${
-                                plan.featured ? "border-purple-200" : "border-gray-200"
-                            } rounded p-7 flex flex-col gap-6 relative overflow-hidden`}
+                            className={`flex flex-col rounded border ${plan.featured ? "border-purple-700 bg-purple-900" : "border-gray-200 bg-white"}`}
                         >
-                            <div>
+                            <div
+                                className={`px-7 pt-7 pb-6 border-b ${plan.featured ? "border-purple-800" : "border-gray-100"}`}
+                            >
                                 <p
-                                    className={`text-xs font-semibold uppercase tracking-wider ${
-                                        plan.featured ? "text-purple-600" : "text-gray-400"
-                                    }`}
+                                    className={`text-xs font-bold uppercase tracking-widest mb-3 ${plan.featured ? "text-purple-400" : "text-gray-400"}`}
                                 >
                                     {plan.name}
                                 </p>
-                                <p className="text-4xl font-bold tracking-tight text-gray-900 mt-2">
-                                    {formatPrice(plan)}
-                                </p>
-                                <p className="text-xs text-gray-400 mt-1">{plan.period}</p>
-                            </div>
-                            <hr className="border-gray-100" />
-                            <ul className="flex flex-col gap-3 flex-1">
-                                {plan.features.map((item) => (
-                                    <li
-                                        key={item}
-                                        className="flex gap-2.5 items-start text-sm text-gray-600"
+                                <div className="flex items-end gap-1.5">
+                                    <span
+                                        className={`text-5xl font-bold leading-none ${plan.featured ? "text-white" : "text-gray-900"}`}
                                     >
-                                        <span className="text-purple-600 font-semibold mt-px">✓</span>
-                                        {item}
-                                    </li>
-                                ))}
-                            </ul>
-                            <AuthLink
-                                href={plan.href}
-                                className={`text-sm font-semibold text-center py-2.5 rounded transition-colors ${
-                                    plan.featured
-                                        ? "bg-purple-600 text-white hover:bg-purple-700"
-                                        : "border border-gray-200 text-gray-700 hover:border-purple-400 hover:text-purple-700"
-                                }`}
-                                authenticatedText={plan.cta}
-                                authenticatedHref={plan.authenticatedHref}
-                            >
-                                {plan.cta}
-                            </AuthLink>
+                                        {formatPrice(plan)}
+                                    </span>
+                                    <span
+                                        className={`text-sm mb-1 ${plan.featured ? "text-purple-400" : "text-gray-400"}`}
+                                    >
+                                        {plan.period}
+                                    </span>
+                                </div>
+                                <p
+                                    className={`text-sm mt-3 leading-relaxed ${plan.featured ? "text-purple-300" : "text-gray-500"}`}
+                                >
+                                    {plan.description}
+                                </p>
+                            </div>
+                            <div className="flex-1 px-7 py-6">
+                                <ul className="flex flex-col gap-3.5">
+                                    {plan.features.map((item) => (
+                                        <li
+                                            key={item}
+                                            className="flex gap-2.5 items-start text-sm text-gray-600"
+                                        >
+                                            <Check
+                                                className={`w-4 h-4 shrink-0 mt-0.5 ${plan.featured ? "text-purple-400" : "text-purple-600"}`}
+                                            />
+                                            <span
+                                                className={`text-sm ${plan.featured ? "text-purple-100" : "text-gray-700"}`}
+                                            >
+                                                {item}
+                                            </span>
+                                        </li>
+                                    ))}
+                                </ul>
+                            </div>
+                            <div className="px-7 pb-7">
+                                <AuthLink
+                                    href={plan.href}
+                                    className={`block w-full text-sm font-semibold text-center py-2.5 rounded border transition-colors ${
+                                        plan.featured
+                                            ? "bg-white text-purple-900 border-white hover:bg-purple-50"
+                                            : "border border-purple-600 text-purple-600 hover:bg-purple-50"
+                                    }`}
+                                    authenticatedText={plan.cta}
+                                    authenticatedHref={plan.authenticatedHref}
+                                >
+                                    {plan.cta}
+                                </AuthLink>
+                            </div>
                         </div>
                     ))}
                 </div>

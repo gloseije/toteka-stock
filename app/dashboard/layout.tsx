@@ -12,7 +12,9 @@ export default function DashboardLayout({ children }: { children: React.ReactNod
             <DashboardHeader onMenuClick={() => setIsOpen(true)} />
             <div className="flex flex-1">
                 <Sidebar isOpen={isOpen} setIsOpen={setIsOpen} />
-                <main className="flex-1 pt-14 lg:pt-10 lg:pl-64">{children}</main>
+                <main className="min-w-0 flex-1 overflow-x-hidden pt-14 lg:pt-10 lg:pl-64">
+                    {children}
+                </main>
             </div>
         </div>
     );

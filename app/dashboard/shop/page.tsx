@@ -2,7 +2,9 @@
 
 import React, { useState } from "react";
 import Link from "next/link";
-import { Store, Save, Users, Globe, MessageCircle, MapPin, Coins, ImageIcon } from "lucide-react";
+import { Store, Save, Users, Globe, MessageCircle, MapPin } from "lucide-react";
+import ImageUpload from "@/components/image-upload";
+import { Skeleton } from "@/components/skeleton";
 
 // ─── Shared classes ───────────────────────────────────────────────────────────
 
@@ -16,27 +18,94 @@ const labelCls = "block text-xs font-semibold text-gray-700 mb-1.5";
 export default function ShopSettingsPage() {
     const [name, setName] = useState("Ma Boutique");
     const [slug, setSlug] = useState("ma-boutique");
+    const [logoUrl, setLogoUrl] = useState<string | undefined>(undefined);
     const [whatsapp, setWhatsapp] = useState("+243");
     const [city, setCity] = useState("Kinshasa");
-    const [currency, setCurrency] = useState("CDF");
+    const [currency, setCurrency] = useState<"CDF" | "USD">("CDF");
+    const [exchangeRate, setExchangeRate] = useState("22500");
     const [loading, setLoading] = useState(false);
+    const [pageLoading, setPageLoading] = useState(true);
+
+    React.useEffect(() => {
+        const fetchShop = async () => {
+            try {
+                const res = await fetch("/api/shop");
+                if (res.ok) {
+                    const data = await res.json();
+                    if (data.shop) {
+                        setName(data.shop.name || "");
+                        setSlug(data.shop.slug || "");
+                        setLogoUrl(data.shop.logoUrl || undefined);
+                        setWhatsapp(data.shop.whatsapp || "");
+                        setCity(data.shop.city || "");
+                        setCurrency(data.shop.currency || "CDF");
+                        setExchangeRate(String(data.shop.exchangeRate || 22500));
+                    }
+                }
+            } catch (error) {
+                console.error("Erreur lors de la récupération de la boutique", error);
+            } finally {
+                setPageLoading(false);
+            }
+        };
+
+        fetchShop();
+    }, []);
 
     const handleSubmit = async (e: React.SubmitEvent) => {
         e.preventDefault();
         setLoading(true);
         try {
-            // TODO: PATCH /api/shop
+            const res = await fetch("/api/shop", {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, slug, logoUrl, whatsapp, city, exchangeRate }),
+            });
+
+            if (!res.ok) {
+                console.error("Erreur de mise à jour");
+                alert("Une erreur est survenue lors de la mise à jour.");
+                return;
+            }
+            alert("Boutique mise à jour avec succès !");
+        } catch (error) {
+            console.error(error);
+            alert("Une erreur est survenue.");
         } finally {
             setLoading(false);
         }
     };
+
+    if (pageLoading) {
+        return (
+            <div className="mx-auto flex w-full max-w-7xl flex-col gap-6 p-4 sm:p-6 lg:p-8">
+                <Skeleton className="h-8 w-64" />
+                <div className="rounded-lg border border-gray-200 bg-white p-6 space-y-8">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                    <Skeleton className="h-32 w-full" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <Skeleton className="h-10 w-full" />
+                        <Skeleton className="h-10 w-full" />
+                    </div>
+                    <div className="flex justify-end">
+                        <Skeleton className="h-10 w-40" />
+                    </div>
+                </div>
+            </div>
+        );
+    }
 
     return (
         <div className="p-4 sm:p-6 lg:p-8 flex flex-col gap-8 max-w-7xl w-full">
             {/* Header */}
             <div className="flex items-center justify-between">
                 <div>
-                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900">Paramètres de la boutique</h1>
+                    <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                        Paramètres de la boutique
+                    </h1>
                 </div>
                 <Link
                     href="/dashboard/shop/members"
@@ -53,14 +122,14 @@ export default function ShopSettingsPage() {
             >
                 <div className="p-4 sm:p-6 lg:p-8 flex flex-col gap-8">
                     {/* Identité */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-8 border-b border-gray-50">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-8 border-b border-gray-50">
                         <div className="flex flex-col gap-1">
                             <h2 className="text-sm font-bold text-gray-900">Identité</h2>
                             <p className="text-xs text-gray-400">
                                 Nom et adresse publique de votre boutique.
                             </p>
                         </div>
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-4 lg:col-span-2">
                             <div>
                                 <label className={labelCls}>Nom de la boutique</label>
                                 <div className="relative">
@@ -75,10 +144,12 @@ export default function ShopSettingsPage() {
                                 </div>
                             </div>
                             <div>
-                                <label className={labelCls}>Logo</label>
-                                <div className="w-16 h-16 border border-gray-200 rounded bg-gray-50 flex items-center justify-center overflow-hidden">
-                                    <ImageIcon className="w-6 h-6 text-gray-300" />
-                                </div>
+                                <ImageUpload
+                                    label="Logo"
+                                    value={logoUrl}
+                                    onChange={(url) => setLogoUrl(url)}
+                                    onRemove={() => setLogoUrl(undefined)}
+                                />
                             </div>
                             <div>
                                 <label className={labelCls}>URL (Slug)</label>
@@ -97,7 +168,7 @@ export default function ShopSettingsPage() {
                     </div>
 
                     {/* Contact & Localisation */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pb-8 border-b border-gray-50">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-8 border-b border-gray-50">
                         <div className="flex flex-col gap-1">
                             <h2 className="text-sm font-bold text-gray-900">
                                 Contact & Localisation
@@ -106,7 +177,7 @@ export default function ShopSettingsPage() {
                                 Comment vos clients peuvent vous joindre.
                             </p>
                         </div>
-                        <div className="flex flex-col gap-4">
+                        <div className="flex flex-col gap-4 lg:col-span-2">
                             <div>
                                 <label className={labelCls}>WhatsApp</label>
                                 <div className="relative">
@@ -136,26 +207,37 @@ export default function ShopSettingsPage() {
                         </div>
                     </div>
 
-                    {/* Préférences */}
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 pb-8 border-b border-gray-50">
                         <div className="flex flex-col gap-1">
-                            <h2 className="text-sm font-bold text-gray-900">Préférences</h2>
+                            <h2 className="text-sm font-bold text-gray-900">
+                                Devise et conversion
+                            </h2>
                             <p className="text-xs text-gray-400">
-                                Réglages régionaux et monétaires.
+                                Les calculs des ventes utilisent ces paramètres.
                             </p>
                         </div>
-                        <div>
-                            <label className={labelCls}>Devise principale</label>
-                            <div className="relative">
-                                <Coins className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
-                                <select
-                                    value={currency}
-                                    onChange={(e) => setCurrency(e.target.value)}
-                                    className={`${inputCls} pl-10`}
-                                >
-                                    <option value="CDF">Franc Congolais (Fc)</option>
-                                    <option value="USD">Dollar Américain ($)</option>
-                                </select>
+                        <div className="flex flex-col gap-4 lg:col-span-2">
+                            <div>
+                                <label className={labelCls}>Devise de la boutique</label>
+                                <div className={`${inputCls} bg-gray-50 text-gray-500`}>
+                                    {currency === "CDF"
+                                        ? "Franc congolais (Fc)"
+                                        : "Dollar américain ($)"}
+                                </div>
+                            </div>
+                            <div>
+                                <label className={labelCls}>Taux de change : 10 $ =</label>
+                                <div className="flex items-center gap-2">
+                                    <input
+                                        type="number"
+                                        min="1"
+                                        step="0.01"
+                                        value={exchangeRate}
+                                        onChange={(e) => setExchangeRate(e.target.value)}
+                                        className={inputCls}
+                                    />
+                                    <span className="text-sm text-gray-500">Fc</span>
+                                </div>
                             </div>
                         </div>
                     </div>

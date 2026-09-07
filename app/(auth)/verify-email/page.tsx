@@ -2,14 +2,14 @@
 
 import { useEffect, useState, Suspense } from "react";
 import Link from "next/link";
-import { useRouter, useSearchParams } from "next/navigation";
+import Image from "next/image";
+import { useSearchParams } from "next/navigation";
 import { Loader2, CheckCircle, XCircle, ArrowRight } from "lucide-react";
 import { authClient } from "@/lib/auth-client";
 
 // ─── Content ──────────────────────────────────────────────────────────────────
 
 function VerifyEmailContent() {
-    const router = useRouter();
     const searchParams = useSearchParams();
     const token = searchParams.get("token");
 
@@ -47,10 +47,12 @@ function VerifyEmailContent() {
         <div className="w-full max-w-sm bg-white border border-gray-200 rounded p-8 flex flex-col gap-7">
             {/* Logo */}
             <Link href="/" className="flex items-center gap-2 w-fit">
-                <div className="w-7 h-7 bg-purple-600 rounded flex items-center justify-center text-white font-bold text-xs shrink-0">
-                    T
-                </div>
-                <span className="font-bold text-sm text-gray-900">Toteka Stock</span>
+                <Image
+                    src="/toteka-stock-logo-primaire.svg"
+                    alt="Toteka Stock"
+                    width={160}
+                    height={50}
+                />
             </Link>
 
             {/* Statut */}
@@ -115,8 +117,8 @@ export default function VerifyEmailPage() {
         <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4 py-12">
             <Suspense
                 fallback={
-                    <div className="w-full max-w-sm bg-white border border-gray-200 rounded p-8 flex flex-col gap-4">
-                        <Loader2 className="w-8 h-8 text-purple-600 animate-spin" />
+                    <div className="w-full max-w-sm bg-white border border-gray-200 rounded p-8 flex flex-col items-center gap-4">
+                        <div className="size-12 border-4 border-purple-200 border-t-purple-600 rounded-full animate-spin" />
                         <p className="text-sm text-gray-500">Chargement...</p>
                     </div>
                 }

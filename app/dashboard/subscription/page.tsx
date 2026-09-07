@@ -1,27 +1,21 @@
 "use client";
 
-import React, { useState, useEffect, Suspense } from "react";
+import React, { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
-import {
-    CreditCard,
-    Check,
-    Calendar,
-    Receipt,
-    AlertCircle,
-} from "lucide-react";
-import CurrencyToggle from "@/components/currency-toggle";
+import { CreditCard, Check, Calendar, Receipt, AlertCircle } from "lucide-react";
+import { formatDate } from "@/lib/date";
+import { Skeleton, SkeletonCard } from "@/components/skeleton";
+import { BETA_MODE } from "@/lib/beta";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
-type Currency = "USD" | "FC";
-type PlanId = "FREE" | "STANDARD" | "PRO";
+type PlanId = "TRIAL" | "PRO";
 type SubscriptionStatus = "ACTIVE" | "PAST_DUE" | "CANCELLED" | "EXPIRED";
 type PaymentStatus = "PENDING" | "COMPLETED" | "FAILED" | "REFUNDED";
 
 interface PlanOption {
     id: PlanId;
     name: string;
-    priceUSD: number;
     priceFC: number;
     period: string;
     features: string[];
@@ -49,37 +43,28 @@ interface CurrentSubscription {
 
 const plans: PlanOption[] = [
     {
-        id: "FREE",
-        name: "Gratuit",
-        priceUSD: 0,
+        id: "TRIAL",
+        name: "Essai gratuit",
         priceFC: 0,
-        period: "à vie",
-        features: ["Jusqu'à 20 produits", "Tableau de bord du jour", "Lien boutique public"],
-    },
-    {
-        id: "STANDARD",
-        name: "Standard",
-        priceUSD: 2.2,
-        priceFC: 5000,
-        period: "/ mois",
+        period: "14 jours",
         features: [
-            "Produits illimités",
+            "Produits et ventes illimités",
             "Historique complet",
-            "Gestion des clients",
-            "Factures PDF + alertes stock",
+            "Factures et reçus PDF",
+            "Alertes stock et statistiques",
         ],
     },
     {
         id: "PRO",
-        name: "Pro",
-        priceUSD: 5,
-        priceFC: 11250,
+        name: "Abonnement",
+        priceFC: 10000,
         period: "/ mois",
         features: [
-            "Tout du Standard",
-            "Multi-utilisateurs",
-            "Export Excel / CSV",
-            "Rapport mensuel",
+            "Produits et ventes illimités",
+            "Historique complet",
+            "Factures et reçus PDF",
+            "Alertes stock et statistiques avancées",
+            "Multi-utilisateurs et export en option",
         ],
     },
 ];
@@ -112,16 +97,6 @@ const paymentStatusStyles: Record<PaymentStatus, string> = {
     REFUNDED: "bg-gray-50 text-gray-600 border-gray-100",
 };
 
-// ─── Helpers ──────────────────────────────────────────────────────────────────
-
-function formatDate(iso: string) {
-    return new Date(iso).toLocaleDateString("fr-FR", {
-        day: "numeric",
-        month: "long",
-        year: "numeric",
-    });
-}
-
 function formatAmount(amount: number, currency: "CDF" | "USD") {
     if (currency === "USD") {
         return `${amount.toLocaleString("fr-FR")}\u00A0$`;
@@ -134,43 +109,55 @@ function formatAmount(amount: number, currency: "CDF" | "USD") {
 function SubscriptionContent() {
     const searchParams = useSearchParams();
     const preselectedPlan = searchParams.get("plan")?.toUpperCase() as PlanId | undefined;
+    const trialExpired = searchParams.get("expired") === "true";
 
-    const [currency, setCurrency] = useState<Currency>("FC");
-    const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(null);
-    const [changing, setChanging] = useState(false);
     const [loading, setLoading] = useState(false);
 
     // TODO: charger depuis l'API
-    const [subscription] = useState<CurrentSubscription>({
-        planId: "FREE",
-        planName: "Gratuit",
+    const [subscription] = useState<CurrentSubscription>(() => ({
+        planId: "TRIAL",
+        planName: "Essai gratuit",
         status: "ACTIVE",
-        currentPeriodEnd: new Date(Date.now() + 365 * 24 * 60 * 60 * 1000).toISOString(),
+        currentPeriodEnd: "2026-09-21T23:59:59.000Z",
         paymentMethod: null,
-    });
+    }));
     const [payments] = useState<PaymentRecord[]>([]);
 
-    useEffect(() => {
-        if (preselectedPlan && ["STANDARD", "PRO"].includes(preselectedPlan)) {
-            setSelectedPlan(preselectedPlan);
-            setChanging(true);
-        }
-    }, [preselectedPlan]);
+    const [selectedPlan, setSelectedPlan] = useState<PlanId | null>(
+        preselectedPlan === "PRO" ? preselectedPlan : null
+    );
+    const [changing, setChanging] = useState(preselectedPlan === "PRO");
 
-    const formatPrice = (plan: PlanOption) => {
-        if (currency === "USD") {
-            return `${plan.priceUSD.toLocaleString("fr-FR")}\u00A0$`;
-        }
-        return `${plan.priceFC.toLocaleString("fr-FR")}\u00A0Fc`;
-    };
+    const formatPrice = (plan: PlanOption) =>
+        `${plan.priceFC.toLocaleString("fr-FR")}\u00A0Fc`;
 
     const handleChangePlan = async () => {
         if (!selectedPlan || selectedPlan === subscription.planId) return;
         setLoading(true);
         try {
-            // TODO: POST /api/subscription — initier paiement Mobile Money
+            const res = await fetch("/api/checkout", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ planId: selectedPlan }),
+            });
+            const data = (await res.json()) as {
+                checkoutUrl?: string;
+                alreadyPurchased?: boolean;
+                error?: string;
+            };
+            if (!res.ok) {
+                alert(data.error ?? "Impossible d'initier le paiement");
+                return;
+            }
+            if (data.checkoutUrl) {
+                window.location.href = data.checkoutUrl;
+                return;
+            }
             setChanging(false);
             setSelectedPlan(null);
+        } catch (error) {
+            console.error("Checkout error:", error);
+            alert("Erreur lors de l'initiation du paiement");
         } finally {
             setLoading(false);
         }
@@ -185,6 +172,18 @@ function SubscriptionContent() {
                     Consultez votre plan actuel et gérez vos paiements.
                 </p>
             </div>
+
+            {trialExpired && (
+                <div className="bg-purple-50 border border-purple-200 rounded px-4 py-3">
+                    <p className="text-sm font-semibold text-purple-900">
+                        Votre essai gratuit est terminé
+                    </p>
+                    <p className="text-xs text-purple-700 mt-0.5">
+                        Choisissez l&apos;abonnement pour continuer à utiliser Toteka Stock. Le
+                        paiement se fait par Mobile Money.
+                    </p>
+                </div>
+            )}
 
             {/* Current subscription */}
             <div className="bg-white border border-gray-200 rounded p-6 flex flex-col gap-6">
@@ -214,26 +213,40 @@ function SubscriptionContent() {
                             </div>
                         </div>
                     </div>
-                    {subscription.planId !== "FREE" && (
-                        <div className="text-right shrink-0">
-                            <div className="flex items-center gap-1.5 text-xs text-gray-500">
-                                <Calendar className="w-3.5 h-3.5" />
-                                Renouvellement
-                            </div>
-                            <p className="text-sm font-semibold text-gray-900 mt-0.5">
-                                {formatDate(subscription.currentPeriodEnd)}
-                            </p>
+                    <div className="text-right shrink-0">
+                        <div className="flex items-center gap-1.5 text-xs text-gray-500">
+                            <Calendar className="w-3.5 h-3.5" />
+                            {subscription.planId === "TRIAL" && BETA_MODE
+                                ? "Période beta"
+                                : subscription.planId === "TRIAL"
+                                  ? "Fin de l'essai"
+                                  : "Renouvellement"}
                         </div>
-                    )}
+                        <p className="text-sm font-semibold text-gray-900 mt-0.5">
+                            {subscription.planId === "TRIAL" && BETA_MODE
+                                ? "Sans limite"
+                                : formatDate(subscription.currentPeriodEnd, { full: true })}
+                        </p>
+                    </div>
                 </div>
 
-                {subscription.planId === "FREE" && !changing && (
+                {subscription.planId === "TRIAL" && !changing && !BETA_MODE && (
                     <button
                         onClick={() => setChanging(true)}
                         className="self-start text-sm font-semibold bg-purple-600 text-white px-5 py-2.5 rounded hover:bg-purple-700 transition-colors"
                     >
-                        Changer de plan
+                        S&apos;abonner
                     </button>
+                )}
+
+                {subscription.planId === "TRIAL" && BETA_MODE && (
+                    <div className="flex items-center gap-3 bg-purple-50 border border-purple-100 rounded p-4 self-start">
+                        <AlertCircle className="w-4 h-4 text-purple-600 shrink-0" />
+                        <p className="text-xs text-purple-800">
+                            Pendant la beta, l&apos;accès est illimité : aucun paiement n&apos;est
+                            requis ni accepté pour le moment.
+                        </p>
+                    </div>
                 )}
             </div>
 
@@ -242,10 +255,9 @@ function SubscriptionContent() {
                 <div className="flex flex-col gap-6">
                     <div className="flex items-center justify-between">
                         <h2 className="text-sm font-bold text-gray-900">Choisir un plan</h2>
-                        <CurrencyToggle currency={currency} onChange={setCurrency} />
                     </div>
 
-                    <div className="grid md:grid-cols-3 gap-4">
+                    <div className="grid md:grid-cols-2 gap-4">
                         {plans.map((plan) => {
                             const isCurrent = plan.id === subscription.planId;
                             const isSelected = selectedPlan === plan.id;
@@ -267,7 +279,7 @@ function SubscriptionContent() {
                                 >
                                     <div>
                                         <p
-                                            className={`text-xs font-semibold uppercase tracking-wider ${plan.id === "STANDARD" ? "text-purple-600" : "text-gray-400"}`}
+                                            className={`text-xs font-semibold uppercase tracking-wider ${plan.id === "PRO" ? "text-purple-600" : "text-gray-400"}`}
                                         >
                                             {plan.name}
                                             {isCurrent && (
@@ -301,8 +313,9 @@ function SubscriptionContent() {
                     <div className="flex items-center gap-3 bg-purple-50 border border-purple-100 rounded p-4">
                         <AlertCircle className="w-4 h-4 text-purple-600 shrink-0" />
                         <p className="text-xs text-purple-800">
-                            Le paiement se fait par Mobile Money. Vous recevrez les instructions
-                            après confirmation.
+                            {BETA_MODE
+                                ? "Pendant la beta, les paiements sont désactivés."
+                                : "À la fin de votre essai de 14 jours, un abonnement actif est nécessaire pour continuer à utiliser Toteka Stock. Le paiement se fait par Mobile Money (Airtel Money, Orange Money, M-Pesa)."}
                         </p>
                     </div>
 
@@ -321,13 +334,14 @@ function SubscriptionContent() {
                             type="button"
                             onClick={handleChangePlan}
                             disabled={
+                                BETA_MODE ||
                                 !selectedPlan ||
                                 selectedPlan === subscription.planId ||
                                 loading
                             }
                             className="text-sm font-semibold bg-purple-600 text-white px-5 py-2.5 rounded hover:bg-purple-700 transition-colors disabled:opacity-40 disabled:cursor-not-allowed"
                         >
-                            {loading ? "Traitement..." : "Confirmer le changement"}
+                            {loading ? "Traitement..." : BETA_MODE ? "Indisponible en beta" : "Confirmer le changement"}
                         </button>
                     </div>
                 </div>
@@ -346,8 +360,8 @@ function SubscriptionContent() {
                         </p>
                     </div>
                 ) : (
-                    <div className="bg-white border border-gray-200 rounded overflow-hidden">
-                        <table className="w-full text-sm">
+                    <div className="bg-white border border-gray-200 rounded overflow-x-auto">
+                        <table className="w-full min-w-170 text-sm">
                             <thead>
                                 <tr className="border-b border-gray-100 bg-gray-50">
                                     <th className="text-left px-4 py-3 text-xs font-semibold text-gray-500 uppercase tracking-wider">
@@ -368,7 +382,7 @@ function SubscriptionContent() {
                                 {payments.map((payment) => (
                                     <tr key={payment.id}>
                                         <td className="px-4 py-3 text-gray-700">
-                                            {formatDate(payment.paidAt ?? payment.createdAt)}
+                                            {formatDate(payment.paidAt ?? payment.createdAt, { full: true })}
                                         </td>
                                         <td className="px-4 py-3 font-medium text-gray-900">
                                             {formatAmount(payment.amount, payment.currency)}
@@ -400,8 +414,14 @@ export default function SubscriptionPage() {
     return (
         <Suspense
             fallback={
-                <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full">
-                    <p className="text-sm text-gray-400">Chargement...</p>
+                <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full flex flex-col gap-6">
+                    <Skeleton className="h-8 w-64" />
+                    <Skeleton className="h-10 w-32" />
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                        <SkeletonCard />
+                        <SkeletonCard />
+                    </div>
+                    <Skeleton className="h-48 w-full" />
                 </div>
             }
         >

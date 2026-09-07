@@ -1,20 +1,19 @@
 "use client";
 
 import Link from "next/link";
-import { usePathname, useRouter } from "next/navigation";
+import { usePathname } from "next/navigation";
 import {
     LayoutDashboard,
     Package,
     Tag,
     ShoppingCart,
-    ClipboardList,
     Users,
-    FileText,
     BarChart3,
     Store,
     X,
     type LucideIcon,
 } from "lucide-react";
+import Image from "next/image";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -52,16 +51,12 @@ const groups: NavGroup[] = [
         title: "Commerce",
         items: [
             { label: "Ventes", href: "/dashboard/sales", Icon: ShoppingCart },
-            { label: "Commandes", href: "/dashboard/orders", Icon: ClipboardList },
             { label: "Clients", href: "/dashboard/customers", Icon: Users },
-            { label: "Factures", href: "/dashboard/invoices", Icon: FileText },
         ],
     },
     {
         title: "Analyse",
-        items: [
-            { label: "Statistiques", href: "/dashboard/stats", Icon: BarChart3 },
-        ],
+        items: [{ label: "Statistiques", href: "/dashboard/stats", Icon: BarChart3 }],
     },
 ];
 
@@ -113,13 +108,15 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     isOpen ? "translate-x-0" : "-translate-x-full",
                 ].join(" ")}
             >
-                <div className={"flex justify-between"}>
+                <div className={"flex justify-between px-4 lg:px-6"}>
                     {/* Logo */}
-                    <div className="flex items-center gap-2.5 px-4 md:px-6 h-14 border-b border-purple-50">
-                        <div className="w-7 h-7 bg-purple-600 rounded flex items-center justify-center text-white font-bold text-xs shrink-0">
-                            T
-                        </div>
-                        <span className="font-bold text-gray-900 tracking-tight">Toteka Stock</span>
+                    <div className="flex items-center h-14 border-b border-purple-50">
+                        <Image
+                            src="/toteka-stock-logo-primaire.svg"
+                            alt="Toteka Stock"
+                            width={160}
+                            height={50}
+                        />
                     </div>
 
                     {/* Close button for mobile */}
@@ -162,7 +159,6 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                         </div>
                     ))}
                 </nav>
-
             </aside>
         </>
     );

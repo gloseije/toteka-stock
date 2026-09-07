@@ -1,16 +1,17 @@
 import type { Metadata } from "next";
-import { Inter } from "next/font/google";
+import { Sora } from "next/font/google";
+import { Toaster } from "sonner";
 import "./globals.css";
 import React from "react";
 
-const inter = Inter({
+const sora = Sora({
     subsets: ["latin"],
-    variable: "--font-inter",
+    variable: "--font-sora",
 });
 
 export const metadata: Metadata = {
     title: "Toteka Stock",
-    description: "Gestion des ventes WhatsApp pour les commerçants en RDC.",
+    description: "Gérez vos ventes comme un commerce structuré.",
 };
 
 export default function RootLayout({
@@ -19,8 +20,11 @@ export default function RootLayout({
     children: React.ReactNode;
 }>) {
     return (
-        <html lang="fr" className={`${inter.variable} h-full antialiased`}>
-            <body className="min-h-full flex flex-col font-sans">{children}</body>
+        <html lang="fr" className={`${sora.variable} h-full antialiased`}>
+            <body className="min-h-full flex flex-col font-sans text-gray-700">
+                {children}
+                <Toaster position="top-right" richColors />
+            </body>
         </html>
     );
 }

@@ -1,6 +1,6 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
@@ -14,7 +14,8 @@ const labelCls = "block text-xs font-semibold text-gray-700 mb-1.5";
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function CustomerEditPage({ params }: { params: { id: string } }) {
+export default function CustomerEditPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const router = useRouter();
 
     const [name, setName] = useState("");
@@ -25,8 +26,23 @@ export default function CustomerEditPage({ params }: { params: { id: string } })
     const [loading, setLoading] = useState(false);
 
     useEffect(() => {
-        // TODO: GET /api/customers/:id et pré-remplir les champs
-    }, [params.id]);
+        const fetchCustomer = async () => {
+            try {
+                const res = await fetch(`/api/customers/${id}`);
+                if (res.ok) {
+                    const customer = await res.json();
+                    setName(customer.name || "");
+                    setEmail(customer.email || "");
+                    setPhone(customer.phone || "");
+                    setAddress(customer.address || "");
+                    setNote(customer.note || "");
+                }
+            } catch (error) {
+                console.error("Fetch error:", error);
+            }
+        };
+        fetchCustomer();
+    }, [id]);
 
     // ── Validation ─────────────────────────────────────────────────────────────
 
@@ -39,20 +55,33 @@ export default function CustomerEditPage({ params }: { params: { id: string } })
         if (!valid) return;
         setLoading(true);
         try {
-            // TODO: PATCH /api/customers/:id
-            router.push(`/dashboard/customers/${params.id}`);
+            const res = await fetch(`/api/customers/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, phone, address, note }),
+            });
+
+            if (res.ok) {
+                router.push(`/dashboard/customers/${id}`);
+                router.refresh();
+            } else {
+                alert("Erreur lors de la mise à jour");
+            }
+        } catch (error) {
+            console.error("Submit error:", error);
+            alert("Une erreur est survenue");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex-1 flex items-start justify-center p-8">
-            <div className="w-full max-w-7xl bg-white border border-gray-200 rounded p-8 flex flex-col gap-8">
+        <div className="flex-1 flex items-start justify-center p-4 sm:p-8 min-w-0">
+            <div className="w-full max-w-7xl bg-white border border-gray-200 rounded p-4 sm:p-8 flex flex-col gap-8">
                 {/* Header */}
                 <div>
                     <Link
-                        href={`/dashboard/customers/${params.id}`}
+                        href={`/dashboard/customers/${id}`}
                         className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors mb-4"
                     >
                         <ArrowLeft className="w-3.5 h-3.5" />
@@ -126,7 +155,7 @@ export default function CustomerEditPage({ params }: { params: { id: string } })
                     {/* Actions */}
                     <div className="border-t border-gray-100 pt-6 flex items-center justify-end gap-3">
                         <Link
-                            href={`/dashboard/customers/${params.id}`}
+                            href={`/dashboard/customers/${id}`}
                             className="text-sm text-gray-500 hover:text-gray-700 transition-colors px-3 py-2"
                         >
                             Annuler

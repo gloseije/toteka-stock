@@ -2,6 +2,7 @@ import { betterAuth } from "better-auth";
 import { prismaAdapter } from "better-auth/adapters/prisma";
 import { prisma } from "./prisma";
 import { sendEmail } from "./email";
+import { ensureTrialSubscription } from "./subscription";
 
 export const auth = betterAuth({
     database: prismaAdapter(prisma, {
@@ -9,6 +10,16 @@ export const auth = betterAuth({
     }),
     secret: process.env.BETTER_AUTH_SECRET,
     baseURL: process.env.BETTER_AUTH_URL,
+    databaseHooks: {
+        user: {
+            create: {
+                // Crée l'abonnement d'essai de 14 jours dès l'inscription
+                after: async (user) => {
+                    await ensureTrialSubscription(user.id, new Date(user.createdAt));
+                },
+            },
+        },
+    },
     emailAndPassword: {
         enabled: true,
     },

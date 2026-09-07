@@ -83,9 +83,7 @@ export default function ShopMembersPage() {
         setLoading(true);
         try {
             // TODO: PATCH /api/shop/members/:id
-            setMembers((prev) =>
-                prev.map((m) => (m.id === id ? { ...m, role: editRole } : m))
-            );
+            setMembers((prev) => prev.map((m) => (m.id === id ? { ...m, role: editRole } : m)));
             setEditId(null);
         } finally {
             setLoading(false);
@@ -93,7 +91,7 @@ export default function ShopMembersPage() {
     };
 
     const handleRemove = async (id: string) => {
-        // TODO: DELETE /api/shop/members/:id — confirmation à ajouter
+        if (!confirm("Voulez-vous vraiment retirer ce membre de la boutique ?")) return;
         setMembers((prev) => prev.filter((m) => m.id !== id));
     };
 

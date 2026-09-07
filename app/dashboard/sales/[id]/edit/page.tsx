@@ -1,9 +1,10 @@
 "use client";
 
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, use } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft, Plus, Trash2 } from "lucide-react";
+import { formatCurrency, roundCurrency, type Currency } from "@/lib/currency";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -15,16 +16,15 @@ interface LineItem {
     quantity: number;
 }
 
-type PaymentMethod = "Espèces" | "Airtel Money" | "Orange Money" | "M-Pesa" | "Autre";
+type PaymentMethod = "CASH" | "MOBILE_MONEY" | "BANK_TRANSFER" | "OTHER";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
-const PAYMENT_METHODS: PaymentMethod[] = [
-    "Espèces",
-    "Airtel Money",
-    "Orange Money",
-    "M-Pesa",
-    "Autre",
+const PAYMENT_METHODS: Array<{ value: PaymentMethod; label: string }> = [
+    { value: "CASH", label: "Espèces" },
+    { value: "MOBILE_MONEY", label: "Mobile Money" },
+    { value: "BANK_TRANSFER", label: "Virement" },
+    { value: "OTHER", label: "Autre" },
 ];
 
 // ─── Shared classes ───────────────────────────────────────────────────────────
@@ -49,24 +49,48 @@ function emptyLine(overrides?: Partial<LineItem>): LineItem {
 
 // ─── Page ─────────────────────────────────────────────────────────────────────
 
-export default function SaleEditPage({ params }: { params: { id: string } }) {
+export default function SaleEditPage({ params }: { params: Promise<{ id: string }> }) {
+    const { id } = use(params);
     const router = useRouter();
 
     const [lines, setLines] = useState<LineItem[]>([emptyLine()]);
     const [customerName, setCustomerName] = useState("");
-    const [payment, setPayment] = useState<PaymentMethod>("Espèces");
+    const [customerId, setCustomerId] = useState<string | null>(null);
+    const [payment, setPayment] = useState<PaymentMethod>("CASH");
     const [note, setNote] = useState("");
     const [loading, setLoading] = useState(false);
+    const [shopCurrency, setShopCurrency] = useState<Currency>("CDF");
 
     useEffect(() => {
-        // TODO: GET /api/sales/:id et pré-remplir les champs
-        // Exemple une fois l'API branchée :
-        // const sale = await fetchSale(params.id)
-        // setLines(sale.lines.map(l => ({ ...l, key: Math.random().toString(36).slice(2) })))
-        // setCustomerName(sale.customerName ?? "")
-        // setPayment(sale.paymentMethod as PaymentMethod)
-        // setNote(sale.note ?? "")
-    }, [params.id]);
+        const loadSale = async () => {
+            const response = await fetch(`/api/sales/${id}`);
+            if (!response.ok) return;
+            const data = await response.json();
+            setCustomerId(data.customerId ?? null);
+            setCustomerName(data.customer?.name ?? "");
+            setPayment(data.paymentMethod ?? "CASH");
+            setNote(data.note ?? "");
+            setShopCurrency(data.items?.[0]?.currency ?? "CDF");
+            setLines(
+                data.items.map(
+                    (item: {
+                        id: string;
+                        productId: string;
+                        product: { name: string };
+                        unitPrice: number;
+                        quantity: number;
+                    }) => ({
+                        key: item.id,
+                        productId: item.productId,
+                        productName: item.product.name,
+                        unitPrice: Number(item.unitPrice),
+                        quantity: item.quantity,
+                    })
+                )
+            );
+        };
+        void loadSale();
+    }, [id]);
 
     // ── Ligne ──────────────────────────────────────────────────────────────────
 
@@ -79,7 +103,10 @@ export default function SaleEditPage({ params }: { params: { id: string } }) {
 
     // ── Total ──────────────────────────────────────────────────────────────────
 
-    const total = lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0);
+    const total = roundCurrency(
+        lines.reduce((sum, l) => sum + l.unitPrice * l.quantity, 0),
+        shopCurrency
+    );
 
     // ── Validation ─────────────────────────────────────────────────────────────
 
@@ -92,20 +119,38 @@ export default function SaleEditPage({ params }: { params: { id: string } }) {
         if (!valid) return;
         setLoading(true);
         try {
-            // TODO: PATCH /api/sales/:id
-            router.push(`/dashboard/sales/${params.id}`);
+            const response = await fetch(`/api/sales/${id}`, {
+                method: "PATCH",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    customerId,
+                    paymentMethod: payment,
+                    note: note || null,
+                    items: lines.map(({ productId, quantity, unitPrice }) => ({
+                        productId,
+                        quantity,
+                        unitPrice,
+                    })),
+                }),
+            });
+            if (!response.ok) {
+                alert("Erreur lors de la modification de la vente.");
+                setLoading(false);
+                return;
+            }
+            router.push(`/dashboard/sales/${id}`);
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex-1 flex items-start justify-center p-8">
-            <div className="w-full max-w-7xl bg-white border border-gray-200 rounded p-8 flex flex-col gap-8">
+        <div className="flex-1 flex items-start justify-center p-4 sm:p-8 min-w-0">
+            <div className="w-full max-w-7xl bg-white border border-gray-200 rounded p-4 sm:p-8 flex flex-col gap-8">
                 {/* Header */}
                 <div>
                     <Link
-                        href={`/dashboard/sales/${params.id}`}
+                        href={`/dashboard/sales/${id}`}
                         className="flex items-center gap-1.5 text-xs text-gray-400 hover:text-gray-700 transition-colors mb-4"
                     >
                         <ArrowLeft className="w-3.5 h-3.5" />
@@ -155,8 +200,13 @@ export default function SaleEditPage({ params }: { params: { id: string } }) {
                                         className={inputCls + " flex-1 text-center"}
                                     />
                                     <span className="text-sm text-gray-500 w-24 text-right shrink-0">
-                                        {(line.unitPrice * line.quantity).toLocaleString("fr-FR")}{" "}
-                                        Fc
+                                        {formatCurrency(
+                                            roundCurrency(
+                                                line.unitPrice * line.quantity,
+                                                shopCurrency
+                                            ),
+                                            shopCurrency
+                                        )}
                                     </span>
                                     <button
                                         type="button"
@@ -211,16 +261,16 @@ export default function SaleEditPage({ params }: { params: { id: string } }) {
                         <div className="flex flex-wrap gap-2">
                             {PAYMENT_METHODS.map((method) => (
                                 <button
-                                    key={method}
+                                    key={method.value}
                                     type="button"
-                                    onClick={() => setPayment(method)}
+                                    onClick={() => setPayment(method.value)}
                                     className={`text-sm px-3 py-1.5 rounded border transition-colors ${
-                                        payment === method
+                                        payment === method.value
                                             ? "border-purple-600 bg-purple-50 text-purple-700 font-semibold"
                                             : "border-gray-200 text-gray-600 hover:border-gray-300"
                                     }`}
                                 >
-                                    {method}
+                                    {method.label}
                                 </button>
                             ))}
                         </div>
@@ -239,16 +289,16 @@ export default function SaleEditPage({ params }: { params: { id: string } }) {
                     </div>
 
                     {/* Total + Actions */}
-                    <div className="border-t border-gray-100 pt-6 flex items-center justify-between">
+                    <div className="border-t border-gray-100 pt-6 flex flex-col-reverse sm:flex-row items-stretch sm:items-center justify-between gap-3">
                         <div>
                             <p className="text-xs text-gray-500">Total</p>
                             <p className="text-2xl font-bold text-gray-900 tracking-tight">
-                                {total.toLocaleString("fr-FR")} Fc
+                                {formatCurrency(total, shopCurrency)}
                             </p>
                         </div>
                         <div className="flex items-center gap-3">
                             <Link
-                                href={`/dashboard/sales/${params.id}`}
+                                href={`/dashboard/sales/${id}`}
                                 className="text-sm text-gray-500 hover:text-gray-700 transition-colors px-3 py-2"
                             >
                                 Annuler

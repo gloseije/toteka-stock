@@ -37,11 +37,13 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
 
     return (
         <header className="fixed inset-x-0 top-0 z-50 flex h-14 w-full items-center justify-between border-b border-purple-100/50 bg-white px-4 lg:px-6">
-            <Link href="/dashboard" className="flex items-center gap-2">
-                <div className="flex h-7 w-7 shrink-0 items-center justify-center rounded bg-purple-600 text-xs font-bold text-white">
-                    T
-                </div>
-                <span className="text-sm font-bold text-gray-900">Toteka Stock</span>
+            <Link href="/dashboard" className="flex items-center gap-1">
+                <Image
+                    src="/toteka-stock-logo-primaire.svg"
+                    alt="Toteka Stock"
+                    width={160}
+                    height={50}
+                />
             </Link>
 
             <div className="flex items-center gap-2">
@@ -80,7 +82,9 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                                         <p className="text-sm font-semibold text-gray-900">
                                             {session.user.name || "Utilisateur"}
                                         </p>
-                                        <p className="text-xs text-gray-500">{session.user.email}</p>
+                                        <p className="text-xs text-gray-500">
+                                            {session.user.email}
+                                        </p>
                                     </div>
                                     <Link
                                         href="/dashboard/settings"

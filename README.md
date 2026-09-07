@@ -1,4 +1,19 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Toteka Stock
+
+## Règles métier importantes
+
+### Vente issue d'une commande
+
+- Une vente ne peut pas être modifiée librement si elle dépend d'une commande.
+- La vente est un reflet de l'état de la commande à la conversion.
+- Si la commande est modifiée, supprimée ou mise à jour dans un statut indiquant que la vente n'a pas abouti, la vente associée doit être mise à jour ou supprimée en conséquence.
+- En pratique : les données d'une vente dérivée d'une commande sont soumises à la logique de la commande et ne doivent pas être traitées comme une vente autonome.
+- Si un changement de statut de commande montre que la vente n'a pas abouti, la vente liée doit être invalidée, corrigée ou supprimée selon le cas métier.
+
+### Règle de conception
+
+- Cette règle doit être documentée dans la logique métier et la base de données, et non dans le frontend.
+- Toute évolution fonctionnelle autour de la conversion commande → vente doit respecter cette dépendance et empêcher les modifications incohérentes entre les deux entités.
 
 ## Getting Started
 

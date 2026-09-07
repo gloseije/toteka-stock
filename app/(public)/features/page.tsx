@@ -1,16 +1,13 @@
-import Link from "next/link";
 import Image from "next/image";
 import {
     Package,
     ShoppingCart,
-    BarChart3,
     Users,
     FileText,
     Share2,
     Bell,
     History,
     MessageSquare,
-    Printer,
     Smartphone,
     ShieldCheck,
     type LucideIcon,
@@ -43,7 +40,7 @@ const features: Feature[] = [
             { icon: Bell, text: "Alertes automatiques pour les produits en fin de stock." },
             { icon: History, text: "Historique détaillé des entrées et sorties de marchandises." },
         ],
-        image: "https://images.unsplash.com/photo-1586769852836-bc069f19e1b6?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/inventory-management.svg",
     },
     {
         title: "Ventes et facturation",
@@ -52,9 +49,9 @@ const features: Feature[] = [
         items: [
             { icon: ShoppingCart, text: "Saisie de vente ultra-rapide adaptée au mobile." },
             { icon: FileText, text: "Génération automatique de factures PDF à votre nom." },
-            { icon: Share2, text: "Partage direct des reçus via WhatsApp ou email." },
+            { icon: Share2, text: "Partage direct des reçus via vos canaux ou email." },
         ],
-        image: "https://images.unsplash.com/photo-1556740758-90de374c12ad?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/invoice.jpg",
         reverse: true,
     },
     {
@@ -63,10 +60,13 @@ const features: Feature[] = [
             "Connaissez vos meilleurs clients et gérez les paiements à crédit en toute sérénité.",
         items: [
             { icon: Users, text: "Répertoire client avec historique d'achats complet." },
-            { icon: MessageSquare, text: "Relance WhatsApp en un clic pour les impayés." },
+            {
+                icon: MessageSquare,
+                text: "Coordonnées client accessibles depuis une fiche dédiée.",
+            },
             { icon: ShieldCheck, text: "Suivi rigoureux des dettes et des paiements partiels." },
         ],
-        image: "https://images.unsplash.com/photo-1552664730-d307ca884978?q=80&w=2070&auto=format&fit=crop",
+        image: "/images/customer-relation.svg",
     },
 ];
 
@@ -122,13 +122,12 @@ export default function FeaturesPage() {
 
                             {/* Image */}
                             <div className="flex-1 w-full">
-                                <div className="relative aspect-video lg:aspect-square rounded overflow-hidden border border-gray-100">
+                                <div className="relative aspect-4/3 overflow-hidden">
                                     <Image
                                         src={feature.image}
                                         alt={feature.title}
                                         fill
-                                        sizes="(max-width: 1024px) 100vw, 50vw"
-                                        className="object-cover"
+                                        className="object-contain"
                                     />
                                 </div>
                             </div>

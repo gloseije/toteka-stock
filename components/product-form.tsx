@@ -3,18 +3,21 @@
 import React, { useState } from "react";
 import Link from "next/link";
 //import { useRouter } from "next/navigation";
-import { ImagePlus } from "lucide-react";
+import ImageUpload from "./image-upload";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
 export interface ProductValues {
     name: string;
-    category: string;
+    categoryId: string;
     sellingPrice: string;
-    costPrice: string;
+    currency: "CDF" | "USD";
+    purchasePrice: string;
     stock: string;
-    minStock: string;
+    lowStockAlert: string;
     description: string;
+    imageUrl?: string;
+    imageKey?: string;
 }
 
 interface ProductFormProps {
@@ -35,16 +38,35 @@ const labelCls = "block text-xs font-semibold text-gray-700 mb-1.5";
 export default function ProductForm({ defaultValues, cancelHref, onSubmit }: ProductFormProps) {
     //const router = useRouter();
     const [loading, setLoading] = useState(false);
+    const [categories, setCategories] = useState<{ id: string; name: string }[]>([]);
 
     const [values, setValues] = useState<ProductValues>({
         name: defaultValues?.name ?? "",
-        category: defaultValues?.category ?? "",
+        categoryId: defaultValues?.categoryId ?? "",
         sellingPrice: defaultValues?.sellingPrice ?? "",
-        costPrice: defaultValues?.costPrice ?? "",
+        currency: defaultValues?.currency ?? "CDF",
+        purchasePrice: defaultValues?.purchasePrice ?? "",
         stock: defaultValues?.stock ?? "",
-        minStock: defaultValues?.minStock ?? "",
+        lowStockAlert: defaultValues?.lowStockAlert ?? "",
         description: defaultValues?.description ?? "",
+        imageUrl: defaultValues?.imageUrl ?? undefined,
+        imageKey: defaultValues?.imageKey ?? undefined,
     });
+
+    React.useEffect(() => {
+        const fetchCategories = async () => {
+            try {
+                const res = await fetch("/api/categories");
+                if (res.ok) {
+                    const data = await res.json();
+                    setCategories(data.categories);
+                }
+            } catch (error) {
+                console.error("Fetch categories error:", error);
+            }
+        };
+        fetchCategories();
+    }, []);
 
     const set =
         (key: keyof ProductValues) =>
@@ -68,12 +90,16 @@ export default function ProductForm({ defaultValues, cancelHref, onSubmit }: Pro
         <form onSubmit={handleSubmit} className="flex flex-col gap-8 max-w-7xl">
             {/* Photo */}
             <div>
-                <label className={labelCls}>Photo du produit</label>
-                <label className="flex flex-col items-center justify-center w-full h-32 border border-dashed border-gray-200 rounded cursor-pointer hover:border-purple-400 transition-colors gap-2 text-gray-400 hover:text-purple-600">
-                    <ImagePlus className="w-6 h-6" />
-                    <span className="text-xs">Cliquez pour ajouter une photo</span>
-                    <input type="file" accept="image/*" className="hidden" />
-                </label>
+                <ImageUpload
+                    label="Photo du produit"
+                    value={values.imageUrl}
+                    onChange={(url, key) =>
+                        setValues((v) => ({ ...v, imageUrl: url, imageKey: key }))
+                    }
+                    onRemove={() =>
+                        setValues((v) => ({ ...v, imageUrl: undefined, imageKey: undefined }))
+                    }
+                />
             </div>
 
             {/* Infos principales */}
@@ -92,15 +118,23 @@ export default function ProductForm({ defaultValues, cancelHref, onSubmit }: Pro
 
                 <div>
                     <label className={labelCls}>Catégorie</label>
-                    <select value={values.category} onChange={set("category")} className={inputCls}>
+                    <select
+                        value={values.categoryId}
+                        onChange={set("categoryId")}
+                        className={inputCls}
+                    >
                         <option value="">Sans catégorie</option>
-                        {/* TODO: charger les catégories depuis l'API */}
+                        {categories.map((c) => (
+                            <option key={c.id} value={c.id}>
+                                {c.name}
+                            </option>
+                        ))}
                     </select>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
-                        <label className={labelCls}>Prix de vente (Fc) *</label>
+                        <label className={labelCls}>Prix de vente *</label>
                         <input
                             type="number"
                             min={0}
@@ -112,13 +146,24 @@ export default function ProductForm({ defaultValues, cancelHref, onSubmit }: Pro
                         />
                     </div>
                     <div>
-                        <label className={labelCls}>Prix d&apos;achat (Fc)</label>
+                        <label className={labelCls}>Devise du produit</label>
+                        <select
+                            value={values.currency}
+                            onChange={set("currency")}
+                            className={inputCls}
+                        >
+                            <option value="CDF">Franc congolais (Fc)</option>
+                            <option value="USD">Dollar américain ($)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label className={labelCls}>Prix d&apos;achat</label>
                         <input
                             type="number"
                             min={0}
                             placeholder="ex. 900"
-                            value={values.costPrice}
-                            onChange={set("costPrice")}
+                            value={values.purchasePrice}
+                            onChange={set("purchasePrice")}
                             className={inputCls}
                         />
                         <p className="text-[11px] text-gray-400 mt-1">
@@ -127,7 +172,7 @@ export default function ProductForm({ defaultValues, cancelHref, onSubmit }: Pro
                     </div>
                 </div>
 
-                <div className="grid grid-cols-2 gap-4">
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                     <div>
                         <label className={labelCls}>Stock *</label>
                         <input
@@ -146,8 +191,8 @@ export default function ProductForm({ defaultValues, cancelHref, onSubmit }: Pro
                             type="number"
                             min={0}
                             placeholder="ex. 5"
-                            value={values.minStock}
-                            onChange={set("minStock")}
+                            value={values.lowStockAlert}
+                            onChange={set("lowStockAlert")}
                             className={inputCls}
                         />
                         <p className="text-[11px] text-gray-400 mt-1">

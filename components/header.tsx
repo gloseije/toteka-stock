@@ -5,6 +5,7 @@ import { useState } from "react";
 import { Menu, X, LogOut } from "lucide-react";
 import { usePathname, useRouter } from "next/navigation";
 import { authClient } from "@/lib/auth-client";
+import Image from "next/image";
 
 const navLinks = [
     { label: "Accueil", href: "/" },
@@ -16,7 +17,7 @@ export default function Header() {
     const [open, setOpen] = useState(false);
     const pathname = usePathname();
     const router = useRouter();
-    const { data: session, isPending } = authClient.useSession();
+    const { data: session /*isPending*/ } = authClient.useSession();
 
     const handleSignOut = async () => {
         try {
@@ -53,11 +54,13 @@ export default function Header() {
         <header className="sticky top-0 z-50 bg-white border-b border-gray-200">
             <div className="max-w-6xl mx-auto px-4 md:px-6 h-16 flex items-center justify-between">
                 {/* Logo */}
-                <Link href="/" className="flex items-center gap-2.5">
-                    <div className="w-7 h-7 bg-purple-600 rounded flex items-center justify-center text-white font-bold text-xs shrink-0">
-                        T
-                    </div>
-                    <span className="font-bold text-gray-900 tracking-tight">Toteka Stock</span>
+                <Link href="/" className="flex items-center gap-1">
+                    <Image
+                        src="/toteka-stock-logo-primaire.svg"
+                        alt="Toteka Stock"
+                        width={160}
+                        height={50}
+                    />
                 </Link>
 
                 {/* Desktop nav */}

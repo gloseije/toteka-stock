@@ -36,7 +36,7 @@ export default function ForgotPasswordPage() {
                     setError(ctx.error.message || "Une erreur est survenue.");
                 }
             });
-        } catch (err) {
+        } catch {
             setError("Une erreur inattendue est survenue.");
         } finally {
             setIsLoading(false);

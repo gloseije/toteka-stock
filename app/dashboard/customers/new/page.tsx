@@ -35,16 +35,29 @@ export default function CustomerNewPage() {
         if (!valid) return;
         setLoading(true);
         try {
-            // TODO: POST /api/customers
-            router.push("/dashboard/customers");
+            const res = await fetch("/api/customers", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ name, phone, address, note }),
+            });
+
+            if (res.ok) {
+                router.push("/dashboard/customers");
+                router.refresh();
+            } else {
+                alert("Erreur lors de la création du client");
+            }
+        } catch (error) {
+            console.error("Submit error:", error);
+            alert("Une erreur est survenue");
         } finally {
             setLoading(false);
         }
     };
 
     return (
-        <div className="flex-1 flex items-start justify-center p-8">
-            <div className="w-full max-w-7xl bg-white border border-gray-200 rounded p-8 flex flex-col gap-8">
+        <div className="flex-1 flex items-start justify-center p-4 sm:p-8 min-w-0">
+            <div className="w-full max-w-7xl bg-white border border-gray-200 rounded p-4 sm:p-8 flex flex-col gap-8">
                 {/* Header */}
                 <div>
                     <Link
