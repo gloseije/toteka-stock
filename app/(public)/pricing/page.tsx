@@ -1,9 +1,8 @@
-"use client";
-
 import Link from "next/link";
 import { Check } from "lucide-react";
 
 import AuthLink from "@/components/auth-link";
+import { Metadata } from "next";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -18,6 +17,12 @@ interface Plan {
     featured?: boolean;
     authenticatedHref?: string;
 }
+
+export const metadata: Metadata = {
+    title: "Tarifs",
+    description:
+        "Découvrez nos tarifs et abonnements pour Toteka Stock : essai gratuit de 14 jours, abonnement mensuel et options d'export.",
+};
 
 const plans: Plan[] = [
     {

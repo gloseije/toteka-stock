@@ -14,6 +14,7 @@ import {
 } from "lucide-react";
 
 import AuthLink from "@/components/auth-link";
+import { Metadata } from "next";
 
 // ─── Data ─────────────────────────────────────────────────────────────────────
 
@@ -29,6 +30,12 @@ interface Feature {
     image: string;
     reverse?: boolean;
 }
+
+export const metadata: Metadata = {
+    title: "Fonctionnalités",
+    description:
+        "Découvrez toutes les fonctionnalités de Toteka Stock : gestion de stock, ventes, clients, factures et alertes.",
+};
 
 const features: Feature[] = [
     {
