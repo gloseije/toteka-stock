@@ -108,7 +108,7 @@ export default function Sidebar({ isOpen, setIsOpen }: SidebarProps) {
                     isOpen ? "translate-x-0" : "-translate-x-full",
                 ].join(" ")}
             >
-                <div className={"flex justify-between px-4 lg:px-6"}>
+                <div className={"flex justify-between px-4"}>
                     {/* Logo */}
                     <div className="flex items-center h-14 border-b border-purple-50">
                         <Image

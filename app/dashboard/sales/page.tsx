@@ -7,7 +7,7 @@ import { Plus, ShoppingCart } from "lucide-react";
 import { SalesTable } from "@/components/sales/sales-table";
 import { Pagination } from "@/components/ui/pagination";
 import { DataToolbar } from "@/components/ui/data-toolbar";
-import { SkeletonPage } from "@/components/skeleton";
+import { SkeletonTable } from "@/components/skeleton";
 import type { SaleListApi } from "@/types";
 import type { Currency } from "@prisma/client";
 
@@ -157,7 +157,7 @@ function SalesContent() {
             )}
 
             {loading || !data ? (
-                <SkeletonPage />
+                <SkeletonTable rows={6} />
             ) : data.sales.length === 0 ? (
                 <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-gray-200 bg-white py-20">
                     <ShoppingCart className="size-12 text-gray-200" />
@@ -194,7 +194,7 @@ function SalesContent() {
 
 export default function SalesPage() {
     return (
-        <Suspense fallback={<SkeletonPage />}>
+        <Suspense fallback={<SkeletonTable rows={6} />}>
             <SalesContent />
         </Suspense>
     );

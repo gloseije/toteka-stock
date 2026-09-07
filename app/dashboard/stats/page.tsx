@@ -116,27 +116,47 @@ export default function StatsPage() {
             </div>
             {error && <p className="text-sm text-red-600">{error}</p>}
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {cards.map(({ title, value, Icon }) => (
-                    <div
-                        key={title}
-                        className="bg-white border border-gray-200 rounded p-6 flex flex-col gap-4 min-w-0"
-                    >
-                        <div className="flex items-center justify-between">
-                            <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
-                                {title}
-                            </span>
-                            <Icon className="w-4 h-4 text-purple-600" />
-                        </div>
-                        <span className="text-xl font-bold text-gray-900 wrap-break-word">
-                            {loading ? <Skeleton className="h-7 w-24" /> : value}
-                        </span>
-                    </div>
-                ))}
+                {loading
+                    ? Array.from({ length: 4 }).map((_, i) => (
+                          <div
+                              key={i}
+                              className="bg-white border border-gray-200 rounded p-6 flex flex-col gap-4 min-w-0"
+                          >
+                              <div className="flex items-center justify-between">
+                                  <Skeleton className="h-3 w-32" />
+                                  <Skeleton className="h-4 w-4 rounded-full" />
+                              </div>
+                              <Skeleton className="h-7 w-24" />
+                          </div>
+                      ))
+                    : cards.map(({ title, value, Icon }) => (
+                          <div
+                              key={title}
+                              className="bg-white border border-gray-200 rounded p-6 flex flex-col gap-4 min-w-0"
+                          >
+                              <div className="flex items-center justify-between">
+                                  <span className="text-xs font-semibold text-gray-500 uppercase tracking-wider">
+                                      {title}
+                                  </span>
+                                  <Icon className="w-4 h-4 text-purple-600" />
+                              </div>
+                              <span className="text-xl font-bold text-gray-900 wrap-break-word">
+                                  {value}
+                              </span>
+                          </div>
+                      ))}
             </div>
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
                 <div className="bg-white border border-gray-200 rounded p-6">
                     <h2 className="text-sm font-bold text-gray-900 mb-5">Répartition par devise</h2>
-                    {data?.currencies.length ? (
+                    {loading ? (
+                        <div className="space-y-3">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                        </div>
+                    ) : data?.currencies.length ? (
                         data.currencies.map((item) => (
                             <div
                                 key={item.currency}
@@ -158,7 +178,14 @@ export default function StatsPage() {
                     <h2 className="text-sm font-bold text-gray-900 mb-5">
                         Produits les plus vendus
                     </h2>
-                    {data?.topProducts.length ? (
+                    {loading ? (
+                        <div className="space-y-3">
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                            <Skeleton className="h-4 w-full" />
+                        </div>
+                    ) : data?.topProducts.length ? (
                         data.topProducts.map((item) => (
                             <div
                                 key={item.productId}

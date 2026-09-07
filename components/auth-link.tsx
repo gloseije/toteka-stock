@@ -25,7 +25,9 @@ export default function AuthLink({
 }: AuthLinkProps) {
     const { data: session } = authClient.useSession();
 
-    return showButton && session && (
+    if (!showButton) return null;
+
+    return (
         <Link href={session ? authenticatedHref : href} className={className}>
             {session ? authenticatedText : children}
         </Link>

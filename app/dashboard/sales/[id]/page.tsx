@@ -174,7 +174,7 @@ export default async function SaleDetailPage(props: { params: Promise<{ id: stri
                                 const totalCostItem =
                                     item.totalCost !== null ? Number(item.totalCost) : null;
                                 return (
-                                    <tr key={item.id} className="transition hover:bg-purple-50/30">
+                                    <tr key={item.id} className="whitespace-nowrap transition hover:bg-purple-50/30">
                                         <td className="px-5 py-3">
                                             <Link
                                                 href={`/dashboard/products/${item.productId}`}

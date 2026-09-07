@@ -56,7 +56,7 @@ export function InvoicePrint({ sale }: InvoicePrintProps) {
                             const unitPrice = Number(item.unitPrice);
                             const totalPrice = Number(item.totalPrice);
                             return (
-                                <tr key={item.id} className="border-b border-gray-100">
+                                <tr key={item.id} className="whitespace-nowrap border-b border-gray-100">
                                     <td className="py-3 text-gray-900">{item.product.name}</td>
                                     <td className="py-3 text-right text-gray-600">{item.quantity}</td>
                                     <td className="py-3 text-right text-gray-600">{formatCurrency(unitPrice, item.currency)}</td>

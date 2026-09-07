@@ -174,7 +174,7 @@ export default async function CustomerDetailPage(props: { params: Promise<{ id: 
                                 </tr>
                             ) : (
                                 customer.sales.map((sale) => (
-                                    <tr key={sale.id} className="transition hover:bg-purple-50/30">
+                                    <tr key={sale.id} className="whitespace-nowrap transition hover:bg-purple-50/30">
                                         <td className="px-5 py-3">
                                             <Link
                                                 href={`/dashboard/sales/${sale.id}`}
@@ -186,13 +186,13 @@ export default async function CustomerDetailPage(props: { params: Promise<{ id: 
                                             </Link>
                                         </td>
                                         <td className="px-5 py-3">
-                                            <div className="flex flex-wrap gap-1">
+                                            <div className="flex flex-row items-center gap-1">
                                                 {sale.items.map((item) => (
                                                     <span
                                                         key={item.id}
-                                                        className="inline-flex items-center gap-1 rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
+                                                        className="inline-flex max-w-40 items-center gap-1 truncate rounded bg-gray-100 px-2 py-0.5 text-xs font-medium text-gray-700"
                                                     >
-                                                        <Package className="size-3 text-gray-400" />
+                                                        <Package className="size-3 shrink-0 text-gray-400" />
                                                         {item.product.name} ×{item.quantity}
                                                     </span>
                                                 ))}

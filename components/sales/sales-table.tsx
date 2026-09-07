@@ -1,4 +1,6 @@
-import Link from "next/link";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { formatCurrency } from "@/lib/currency";
 import { formatDateTime } from "@/lib/date";
 import type { Currency } from "@prisma/client";
@@ -15,6 +17,8 @@ function summarizeLines(sale: SaleListApi): string {
 }
 
 export function SalesTable({ sales, currency }: SalesTableProps) {
+    const router = useRouter();
+
     return (
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="overflow-x-auto">
@@ -39,30 +43,39 @@ export function SalesTable({ sales, currency }: SalesTableProps) {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {sales.map((sale) => (
-                            <tr key={sale.id} className="group transition hover:bg-gray-50/50">
-                                <td className="max-w-56 truncate px-4 py-3">
-                                    <Link
-                                        href={`/dashboard/sales/${sale.id}`}
-                                        className="block text-gray-900 transition hover:text-purple-700"
-                                    >
+                        {sales.map((sale) => {
+                            const href = `/dashboard/sales/${sale.id}`;
+                            return (
+                                <tr
+                                    key={sale.id}
+                                    className="cursor-pointer whitespace-nowrap transition hover:bg-gray-50/50"
+                                    tabIndex={0}
+                                    onClick={() => router.push(href)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" || e.key === " ") {
+                                            e.preventDefault();
+                                            router.push(href);
+                                        }
+                                    }}
+                                >
+                                    <td className="max-w-56 truncate px-4 py-3 text-gray-900">
                                         {summarizeLines(sale)}
-                                    </Link>
-                                </td>
-                                <td className="px-4 py-3 text-gray-500">
-                                    {sale.customer?.name ?? "—"}
-                                </td>
-                                <td className="px-4 py-3 text-gray-500">
-                                    {paymentMethodLabel(sale.paymentMethod)}
-                                </td>
-                                <td className="px-4 py-3 font-medium text-gray-900">
-                                    {formatCurrency(Number(sale.totalAmount), currency)}
-                                </td>
-                                <td className="whitespace-nowrap px-4 py-3 text-gray-500">
-                                    {formatDateTime(sale.soldAt)}
-                                </td>
-                            </tr>
-                        ))}
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-500">
+                                        {sale.customer?.name ?? "—"}
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-500">
+                                        {paymentMethodLabel(sale.paymentMethod)}
+                                    </td>
+                                    <td className="px-4 py-3 font-medium text-gray-900">
+                                        {formatCurrency(Number(sale.totalAmount), currency)}
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-500">
+                                        {formatDateTime(sale.soldAt)}
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

@@ -7,7 +7,7 @@ import { Plus, Users } from "lucide-react";
 import { CustomersTable } from "@/components/customers/customers-table";
 import { Pagination } from "@/components/ui/pagination";
 import { DataToolbar } from "@/components/ui/data-toolbar";
-import { SkeletonPage } from "@/components/skeleton";
+import { SkeletonTable } from "@/components/skeleton";
 import type { Currency } from "@prisma/client";
 
 const SORT_OPTIONS = [
@@ -154,7 +154,7 @@ function CustomersContent() {
             )}
 
             {loading || !data ? (
-                <SkeletonPage />
+                <SkeletonTable rows={6} />
             ) : customersData.length === 0 ? (
                 <div className="rounded-lg border border-gray-200 bg-white flex flex-col items-center justify-center py-20 gap-3">
                     <Users className="size-12 text-gray-200" />
@@ -191,7 +191,7 @@ function CustomersContent() {
 
 export default function CustomersPage() {
     return (
-        <Suspense fallback={<SkeletonPage />}>
+        <Suspense fallback={<SkeletonTable rows={6} />}>
             <CustomersContent />
         </Suspense>
     );

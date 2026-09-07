@@ -1,4 +1,6 @@
-import Link from "next/link";
+"use client";
+
+import { useRouter } from "next/navigation";
 import { Phone, MapPin } from "lucide-react";
 import { formatCurrency } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
@@ -21,6 +23,8 @@ interface CustomersTableProps {
 }
 
 export function CustomersTable({ customers, currency }: CustomersTableProps) {
+    const router = useRouter();
+
     return (
         <div className="overflow-hidden rounded-lg border border-gray-200 bg-white">
             <div className="overflow-x-auto">
@@ -45,50 +49,59 @@ export function CustomersTable({ customers, currency }: CustomersTableProps) {
                         </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-100">
-                        {customers.map((customer) => (
-                            <tr key={customer.id} className="group transition hover:bg-gray-50/50">
-                                <td className="px-4 py-3">
-                                    <Link
-                                        href={`/dashboard/customers/${customer.id}`}
-                                        className="block font-medium text-gray-900 transition hover:text-purple-700"
-                                    >
+                        {customers.map((customer) => {
+                            const href = `/dashboard/customers/${customer.id}`;
+                            return (
+                                <tr
+                                    key={customer.id}
+                                    className="cursor-pointer whitespace-nowrap transition hover:bg-gray-50/50"
+                                    tabIndex={0}
+                                    onClick={() => router.push(href)}
+                                    onKeyDown={(e) => {
+                                        if (e.key === "Enter" || e.key === " ") {
+                                            e.preventDefault();
+                                            router.push(href);
+                                        }
+                                    }}
+                                >
+                                    <td className="px-4 py-3 font-medium text-gray-900">
                                         {customer.name}
-                                    </Link>
-                                </td>
-                                <td className="px-4 py-3 text-gray-500">
-                                    <div className="flex flex-col gap-0.5">
-                                        {customer.phone && (
-                                            <div className="flex items-center gap-1.5">
-                                                <Phone className="size-3 text-gray-300" />
-                                                <span>{customer.phone}</span>
-                                            </div>
-                                        )}
-                                        {customer.address && (
-                                            <div className="flex items-center gap-1.5">
-                                                <MapPin className="size-3 text-gray-300" />
-                                                <span className="truncate max-w-40">
-                                                    {customer.address}
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-500">
+                                        <div className="flex flex-row items-center gap-2">
+                                            {customer.phone && (
+                                                <div className="flex items-center gap-1.5">
+                                                    <Phone className="size-3 text-gray-300" />
+                                                    <span className="truncate">{customer.phone}</span>
+                                                </div>
+                                            )}
+                                            {customer.address && (
+                                                <div className="flex items-center gap-1.5">
+                                                    <MapPin className="size-3 text-gray-300" />
+                                                    <span className="max-w-40 truncate">
+                                                        {customer.address}
+                                                    </span>
+                                                </div>
+                                            )}
+                                            {!customer.phone && !customer.address && (
+                                                <span className="text-gray-300 italic">
+                                                    Aucun contact
                                                 </span>
-                                            </div>
-                                        )}
-                                        {!customer.phone && !customer.address && (
-                                            <span className="text-gray-300 italic">
-                                                Aucun contact
-                                            </span>
-                                        )}
-                                    </div>
-                                </td>
-                                <td className="px-4 py-3 text-right font-medium text-gray-900">
-                                    {customer.totalSales}
-                                </td>
-                                <td className="px-4 py-3 text-right font-medium text-gray-900">
-                                    {formatCurrency(customer.totalSpent, currency)}
-                                </td>
-                                <td className="px-4 py-3 text-gray-500">
-                                    {formatDate(customer.createdAt)}
-                                </td>
-                            </tr>
-                        ))}
+                                            )}
+                                        </div>
+                                    </td>
+                                    <td className="px-4 py-3 text-right font-medium text-gray-900">
+                                        {customer.totalSales}
+                                    </td>
+                                    <td className="px-4 py-3 text-right font-medium text-gray-900">
+                                        {formatCurrency(customer.totalSpent, currency)}
+                                    </td>
+                                    <td className="px-4 py-3 text-gray-500">
+                                        {formatDate(customer.createdAt)}
+                                    </td>
+                                </tr>
+                            );
+                        })}
                     </tbody>
                 </table>
             </div>

@@ -8,7 +8,7 @@ import { useEffect, useState } from "react";
 import { formatCurrency } from "@/lib/currency";
 import { formatDate } from "@/lib/date";
 import { ProductWithSales } from "@/types";
-import { SkeletonPage } from "@/components/skeleton";
+import { SkeletonProductDetail } from "@/components/skeleton";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
 
@@ -70,7 +70,7 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
     };
 
     if (loading) {
-        return <SkeletonPage />;
+        return <SkeletonProductDetail />;
     }
 
     if (!product) return null;
@@ -335,39 +335,47 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
                                 </tr>
                             </thead>
                             <tbody className="divide-y divide-gray-100">
-                                {saleItems.map((item) => (
-                                    <tr
-                                        key={item.id}
-                                        className="group hover:bg-gray-50/30 transition"
-                                    >
-                                        <td className="px-5 py-3 text-gray-500">
-                                            {formatDate(item.sale.soldAt)}
-                                        </td>
-                                        <td className="px-5 py-3 font-medium text-gray-900">
-                                            {item.sale.customer?.name ?? "Client anonyme"}
-                                        </td>
-                                        <td className="px-5 py-3 text-right text-gray-600 font-semibold">
-                                            {item.quantity}
-                                        </td>
-                                        <td className="px-5 py-3 text-right font-bold text-gray-900">
-                                            {formatCurrency(
-                                                Number(item.totalPrice),
-                                                product.currency
-                                            )}
-                                        </td>
-                                        <td className="px-5 py-3 text-right">
-                                            <Link
-                                                href={`/dashboard/sales/${item.saleId}`}
-                                                className="inline-flex items-center gap-1 text-gray-500 hover:text-gray-700 transition"
-                                            >
-                                                <span className="text-[10px] font-bold uppercase">
-                                                    Voir
+                                {saleItems.map((item) => {
+                                    const href = `/dashboard/sales/${item.saleId}`;
+                                    return (
+                                        <tr
+                                            key={item.id}
+                                            className="cursor-pointer whitespace-nowrap transition hover:bg-gray-50/30"
+                                            tabIndex={0}
+                                            onClick={() => router.push(href)}
+                                            onKeyDown={(e) => {
+                                                if (e.key === "Enter" || e.key === " ") {
+                                                    e.preventDefault();
+                                                    router.push(href);
+                                                }
+                                            }}
+                                        >
+                                            <td className="px-5 py-3 text-gray-500">
+                                                {formatDate(item.sale.soldAt)}
+                                            </td>
+                                            <td className="max-w-56 truncate px-5 py-3 font-medium text-gray-900">
+                                                {item.sale.customer?.name ?? "Client anonyme"}
+                                            </td>
+                                            <td className="px-5 py-3 text-right text-gray-600 font-semibold">
+                                                {item.quantity}
+                                            </td>
+                                            <td className="px-5 py-3 text-right font-bold text-gray-900">
+                                                {formatCurrency(
+                                                    Number(item.totalPrice),
+                                                    product.currency
+                                                )}
+                                            </td>
+                                            <td className="px-5 py-3 text-right">
+                                                <span className="inline-flex items-center gap-1 text-gray-500">
+                                                    <span className="text-[10px] font-bold uppercase">
+                                                        Voir
+                                                    </span>
+                                                    <ChevronRight className="size-4 text-gray-300" />
                                                 </span>
-                                                <ChevronRight className="size-4 text-gray-300 transition group-hover:text-gray-500" />
-                                            </Link>
-                                        </td>
-                                    </tr>
-                                ))}
+                                            </td>
+                                        </tr>
+                                    );
+                                })}
                             </tbody>
                         </table>
                     </div>

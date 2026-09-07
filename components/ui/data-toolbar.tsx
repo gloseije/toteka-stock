@@ -42,28 +42,34 @@ export function DataToolbar({
     children,
 }: DataToolbarProps) {
     return (
-        <div className="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-            <SearchInput
-                value={search}
-                onChange={onSearchChange}
-                placeholder={searchPlaceholder}
-            />
-            <div className="flex items-center gap-2">
-                {filterOptions && onFilterChange && (
-                    <FilterSelect
-                        value={filter ?? ""}
-                        onChange={onFilterChange}
-                        options={filterOptions}
-                        placeholder={filterPlaceholder}
+        <div className="flex flex-col md:flex-row gap-3">
+            <div className="flex w-full flex-row flex-wrap items-center gap-3">
+                <div className="min-w-0 flex-1">
+                    <SearchInput
+                        value={search}
+                        onChange={onSearchChange}
+                        placeholder={searchPlaceholder}
                     />
-                )}
-                {sortOptions && onSortChange && (
-                    <SortSelect
-                        value={sort ?? ""}
-                        onChange={onSortChange}
-                        options={sortOptions}
-                    />
-                )}
+                </div>
+                <div className="flex flex-row flex-wrap items-center gap-2">
+                    {filterOptions && onFilterChange && (
+                        <FilterSelect
+                            value={filter ?? ""}
+                            onChange={onFilterChange}
+                            options={filterOptions}
+                            placeholder={filterPlaceholder}
+                        />
+                    )}
+                    {sortOptions && onSortChange && (
+                        <SortSelect
+                            value={sort ?? ""}
+                            onChange={onSortChange}
+                            options={sortOptions}
+                        />
+                    )}
+                </div>
+            </div>
+            <div className="flex-1 flex">
                 {children}
             </div>
         </div>

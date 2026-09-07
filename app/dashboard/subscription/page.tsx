@@ -4,7 +4,7 @@ import React, { useState, Suspense } from "react";
 import { useSearchParams } from "next/navigation";
 import { CreditCard, Check, Calendar, Receipt, AlertCircle } from "lucide-react";
 import { formatDate } from "@/lib/date";
-import { Skeleton, SkeletonCard } from "@/components/skeleton";
+import { Skeleton, SkeletonCard, SkeletonTable } from "@/components/skeleton";
 import { BETA_MODE } from "@/lib/beta";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
@@ -380,7 +380,7 @@ function SubscriptionContent() {
                             </thead>
                             <tbody className="divide-y divide-gray-100">
                                 {payments.map((payment) => (
-                                    <tr key={payment.id}>
+                                    <tr key={payment.id} className="whitespace-nowrap">
                                         <td className="px-4 py-3 text-gray-700">
                                             {formatDate(payment.paidAt ?? payment.createdAt, { full: true })}
                                         </td>
@@ -414,14 +414,17 @@ export default function SubscriptionPage() {
     return (
         <Suspense
             fallback={
-                <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full flex flex-col gap-6">
-                    <Skeleton className="h-8 w-64" />
-                    <Skeleton className="h-10 w-32" />
-                    <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div className="p-4 sm:p-6 lg:p-8 max-w-7xl w-full flex flex-col gap-8">
+                    <div className="space-y-1">
+                        <Skeleton className="h-8 w-64" />
+                        <Skeleton className="h-4 w-96" />
+                    </div>
+                    <SkeletonCard />
+                    <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                         <SkeletonCard />
                         <SkeletonCard />
                     </div>
-                    <Skeleton className="h-48 w-full" />
+                    <SkeletonTable rows={4} columns={4} />
                 </div>
             }
         >

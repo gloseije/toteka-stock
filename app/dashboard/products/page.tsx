@@ -7,7 +7,7 @@ import { Plus, Package } from "lucide-react";
 import { ProductsGrid } from "@/components/products/products-grid";
 import { Pagination } from "@/components/ui/pagination";
 import { DataToolbar } from "@/components/ui/data-toolbar";
-import { SkeletonPage } from "@/components/skeleton";
+import { SkeletonGrid } from "@/components/skeleton";
 
 const SORT_OPTIONS = [
     { value: "createdAt:desc", label: "Date : récent → ancien" },
@@ -171,7 +171,7 @@ function ProductsContent() {
                 <select
                     value={filter}
                     onChange={(e) => updateParam("filter", e.target.value)}
-                    className="rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition"
+                    className="flex-1 rounded-md border border-gray-200 bg-white px-3 py-2 text-sm text-gray-900 focus:outline-none focus:ring-2 focus:ring-purple-500/20 focus:border-purple-500 transition"
                 >
                     {FILTER_OPTIONS.map((option) => (
                         <option key={option.value} value={option.value}>
@@ -188,7 +188,7 @@ function ProductsContent() {
             )}
 
             {loading || !data ? (
-                <SkeletonPage />
+                <SkeletonGrid count={6} />
             ) : data.products.length === 0 ? (
                 <div className="rounded-lg border border-gray-200 bg-white flex flex-col items-center justify-center py-20 gap-3">
                     <Package className="size-12 text-gray-200" />
@@ -225,7 +225,7 @@ function ProductsContent() {
 
 export default function ProductsPage() {
     return (
-        <Suspense fallback={<SkeletonPage />}>
+        <Suspense fallback={<SkeletonGrid count={6} />}>
             <ProductsContent />
         </Suspense>
     );
