@@ -62,6 +62,7 @@ export default function DashboardHeader({ onMenuClick }: DashboardHeaderProps) {
                                             width={36}
                                             height={36}
                                             className="h-full w-full object-cover"
+                                            unoptimized
                                         />
                                     ) : (
                                         getInitial(session.user.name, session.user.email)

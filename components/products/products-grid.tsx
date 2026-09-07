@@ -42,6 +42,7 @@ export function ProductsGrid({ products }: ProductsGridProps) {
                                     fill
                                     className="object-cover transition-transform duration-300 group-hover:scale-105"
                                     sizes="80px"
+                                    unoptimized
                                 />
                             ) : (
                                 <div className="flex size-full items-center justify-center">

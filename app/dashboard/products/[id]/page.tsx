@@ -112,6 +112,7 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
                                 fill
                                 className="object-cover"
                                 sizes="56px"
+                                unoptimized
                             />
                         ) : (
                             <div className="w-full h-full flex items-center justify-center bg-gray-50">
@@ -178,6 +179,7 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
                                 className="object-cover transition-transform duration-500 group-hover:scale-105"
                                 sizes="(max-width: 768px) 100vw, 400px"
                                 priority
+                                unoptimized
                             />
                         ) : (
                             <div className="w-full h-full flex flex-col items-center justify-center bg-gray-50 gap-2">
@@ -201,6 +203,7 @@ export default function ProductDetailPage(props: { params: Promise<{ id: string 
                                         fill
                                         className="object-cover"
                                         sizes="80px"
+                                        unoptimized
                                     />
                                 </div>
                             ))}

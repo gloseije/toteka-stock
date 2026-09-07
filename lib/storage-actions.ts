@@ -59,8 +59,8 @@ export async function deleteFromR2(key: string) {
 
 /**
  * Retourne l'URL publique d'un objet.
- * En local avec Rustfs, c'est l'URL http://localhost:9000/BUCKET/KEY
- * En prod R2, c'est généralement via un worker ou un domaine custom.
+ * En local avec Rustfs, c'est l'URL http://localhost:9000/BUCKET/KEY.
+ * En prod R2, c'est l'URL directe du bucket.
  */
 export function getPublicUrl(key: string) {
     // R2_ACCOUNT_ID est une variable serveur : absente dans les bundles
@@ -70,6 +70,5 @@ export function getPublicUrl(key: string) {
         return `/api/images/${key}`;
     }
 
-    // TODO: Configurer le domaine R2 public ou un worker proxy
     return `https://${process.env.R2_ACCOUNT_ID}.r2.cloudflarestorage.com/${BUCKET_NAME}/${key}`;
 }

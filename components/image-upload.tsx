@@ -89,6 +89,7 @@ export default function ImageUpload({
                         fill
                         className="object-cover"
                         sizes="(max-width: 200px) 100vw, 200px"
+                        unoptimized
                     />
                     <button
                         onClick={(e) => {
