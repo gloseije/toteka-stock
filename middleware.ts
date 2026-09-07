@@ -6,24 +6,19 @@ import { ensureTrialSubscription } from "@/lib/subscription";
 
 // Routes API qui ne nécessitent PAS d'authentification
 const publicApiRoutes = [
-    "/api/auth",        // better-auth catch-all
-    "/api/shop/public", // page publique boutique
-    "/api/products/public", // fiche produit publique
-    "/api/images",      // accès public aux images
-    "/api/webhooks",    // webhooks entrants (authentifiés par signature, pas par session)
+    "/api/auth",
+    "/api/shop/public",
+    "/api/products/public",
+    "/api/images",
+    "/api/webhooks",
 ];
 
 function isPublicApiRoute(pathname: string): boolean {
     return publicApiRoutes.some((route) => pathname.startsWith(route));
 }
 
-export async function proxy(request: NextRequest) {
+export async function middleware(request: NextRequest) {
     const { pathname } = request.nextUrl;
-
-    // ─── Routes pages (dashboard, onboarding) ───────────────────────
-    const sessionCookie =
-        request.cookies.get("better-auth.session_token") ||
-        request.cookies.get("__secure-better-auth.session_token");
 
     const isAuthPage =
         pathname.startsWith("/login") || pathname.startsWith("/register");
@@ -31,25 +26,25 @@ export async function proxy(request: NextRequest) {
     const isOnboardingPage = pathname.startsWith("/onboarding");
     const isProtectedPage = isDashboardPage || isOnboardingPage;
 
-    if (!sessionCookie && isProtectedPage) {
-        return NextResponse.redirect(new URL("/login", request.url));
-    }
-
-    if (sessionCookie && isAuthPage) {
-        return NextResponse.redirect(new URL("/dashboard", request.url));
-    }
-
-    // Si on est sur le dashboard ou onboarding, on vérifie si l'utilisateur a une boutique
-    if (sessionCookie && isProtectedPage) {
+    // ─── Routes pages protégées (dashboard, onboarding) ────────────────
+    if (isProtectedPage || isAuthPage) {
         const session = await auth.api.getSession({
             headers: request.headers,
         });
 
-        if (session?.user) {
-            // Import the prisma instance dynamically or statically
-            // To avoid loading prisma on every request unnecessarily, we can import it globally at the top
+        const isLoggedIn = !!session?.user;
+
+        if (isProtectedPage && !isLoggedIn) {
+            return NextResponse.redirect(new URL("/login", request.url));
+        }
+
+        if (isAuthPage && isLoggedIn) {
+            return NextResponse.redirect(new URL("/dashboard", request.url));
+        }
+
+        if (isLoggedIn && isProtectedPage) {
             const { prisma } = await import("@/lib/prisma");
-            
+
             const shop = await prisma.shop.findUnique({
                 where: { userId: session.user.id },
                 select: { id: true },
@@ -63,8 +58,6 @@ export async function proxy(request: NextRequest) {
                 return NextResponse.redirect(new URL("/dashboard", request.url));
             }
 
-            // Vérification de l'abonnement : un essai expiré (hors beta)
-            // limite l'accès à la page abonnement uniquement.
             const isSubscriptionPage = pathname.startsWith("/dashboard/subscription");
             if (shop && isDashboardPage && !isSubscriptionPage) {
                 const subscription = await ensureTrialSubscription(
@@ -105,4 +98,5 @@ export const config = {
         "/register",
         "/api/:path*",
     ],
+    runtime: "nodejs",
 };
