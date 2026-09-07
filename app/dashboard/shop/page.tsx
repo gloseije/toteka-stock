@@ -147,7 +147,7 @@ export default function ShopSettingsPage() {
                                 <ImageUpload
                                     label="Logo"
                                     value={logoUrl}
-                                    onChange={(url) => setLogoUrl(url)}
+                                    onChange={(_url, key) => setLogoUrl(`/api/images/${key}`)}
                                     onRemove={() => setLogoUrl(undefined)}
                                 />
                             </div>
