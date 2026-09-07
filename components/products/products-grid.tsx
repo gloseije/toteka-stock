@@ -37,7 +37,7 @@ export function ProductsGrid({ products }: ProductsGridProps) {
                         <div className="relative h-20 w-20 shrink-0 overflow-hidden rounded-md border border-gray-100 bg-gray-50">
                             {p.images[0]?.key ? (
                                 <Image
-                                    src={p.images[0].url ?? `/api/images/${p.images[0].key}`}
+                                    src={`/api/images/${p.images[0].key}`}
                                     alt={p.name}
                                     fill
                                     className="object-cover transition-transform duration-300 group-hover:scale-105"

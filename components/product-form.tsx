@@ -93,6 +93,7 @@ export default function ProductForm({ defaultValues, cancelHref, onSubmit }: Pro
                 <ImageUpload
                     label="Photo du produit"
                     value={values.imageUrl}
+                    imageKey={values.imageKey}
                     onChange={(url, key) =>
                         setValues((v) => ({ ...v, imageUrl: url, imageKey: key }))
                     }

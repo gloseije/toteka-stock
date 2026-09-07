@@ -6,6 +6,7 @@ import Image from "next/image";
 
 interface ImageUploadProps {
     value?: string;
+    imageKey?: string;
     onChange: (url: string, key: string) => void;
     onRemove: () => void;
     label?: string;
@@ -14,6 +15,7 @@ interface ImageUploadProps {
 
 export default function ImageUpload({
     value,
+    imageKey,
     onChange,
     onRemove,
     label,
@@ -21,6 +23,8 @@ export default function ImageUpload({
 }: ImageUploadProps) {
     const [uploading, setUploading] = useState(false);
     const fileInputRef = useRef<HTMLInputElement>(null);
+
+    const imageSrc = imageKey ? `/api/images/${imageKey}` : value;
 
     const handleUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
         const file = e.target.files?.[0];
@@ -81,10 +85,10 @@ export default function ImageUpload({
                 <label className="block text-xs font-semibold text-gray-700 mb-1.5">{label}</label>
             )}
 
-            {value ? (
+            {imageSrc ? (
                 <div className="relative w-full aspect-square max-w-50 border border-gray-200 rounded overflow-hidden group">
                     <Image
-                        src={value}
+                        src={imageSrc}
                         alt="Upload"
                         fill
                         className="object-cover"
