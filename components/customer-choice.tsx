@@ -3,6 +3,7 @@
 import { useState } from "react";
 import { Plus } from "lucide-react";
 import { toast } from "sonner";
+import { trackCustomerCreated } from "@/lib/analytics";
 
 interface Customer {
     id: string;
@@ -50,6 +51,7 @@ export function CustomerChoice({
                 return;
             }
             const customer: Customer = await response.json();
+            trackCustomerCreated();
             onCustomerCreated(customer);
             onCustomerIdChange(customer.id);
             setName("");

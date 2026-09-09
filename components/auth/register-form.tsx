@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
 import { registerSchema } from "@/lib/validations";
+import { trackSignUp } from "@/lib/analytics";
 
 // ─── Shared classes ───────────────────────────────────────────────────────────
 
@@ -49,6 +50,7 @@ export function RegisterForm() {
                 { email, password, name, callbackURL: "/onboarding" },
                 {
                     onSuccess: () => {
+                        trackSignUp("email");
                         router.push("/onboarding");
                         router.refresh();
                     },

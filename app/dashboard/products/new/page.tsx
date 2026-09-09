@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
 import ProductForm, { type ProductValues } from "@/components/product-form";
+import { trackProductCreated } from "@/lib/analytics";
 
 export default function ProductNewPage() {
     const router = useRouter();
@@ -17,6 +18,7 @@ export default function ProductNewPage() {
             });
 
             if (res.ok) {
+                trackProductCreated();
                 router.push("/dashboard/products");
                 router.refresh();
             } else {

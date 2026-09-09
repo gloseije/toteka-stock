@@ -3,6 +3,7 @@ import { Sora } from "next/font/google";
 import { Toaster } from "sonner";
 import "./globals.css";
 import React from "react";
+import { GoogleAnalytics } from "@/components/google-analytics";
 
 const sora = Sora({
     subsets: ["latin"],
@@ -69,6 +70,7 @@ export default function RootLayout({
             <body className="min-h-full flex flex-col font-sans text-gray-700">
                 {children}
                 <Toaster position="top-right" richColors />
+                <GoogleAnalytics />
             </body>
         </html>
     );

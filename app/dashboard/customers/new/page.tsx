@@ -4,6 +4,7 @@ import React, { useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { ArrowLeft } from "lucide-react";
+import { trackCustomerCreated } from "@/lib/analytics";
 
 // ─── Shared classes ───────────────────────────────────────────────────────────
 
@@ -42,6 +43,7 @@ export default function CustomerNewPage() {
             });
 
             if (res.ok) {
+                trackCustomerCreated();
                 router.push("/dashboard/customers");
                 router.refresh();
             } else {

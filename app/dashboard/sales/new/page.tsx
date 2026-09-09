@@ -6,6 +6,7 @@ import { useRouter, useSearchParams } from "next/navigation";
 import { ArrowLeft, Loader2, Plus, ShoppingCart, Trash2 } from "lucide-react";
 import { toast } from "sonner";
 import { CustomerChoice } from "@/components/customer-choice";
+import { trackSaleCreated } from "@/lib/analytics";
 import type { CustomerSummary, ProductSummary } from "@/types";
 import {
     convertToShopCurrency,
@@ -159,6 +160,7 @@ function SaleNewForm() {
                 return;
             }
             toast.success("Vente enregistrée");
+            trackSaleCreated(shopCurrency);
             router.push("/dashboard/sales");
             router.refresh();
         } catch (error: unknown) {

@@ -7,6 +7,7 @@ import { Loader2 } from "lucide-react";
 import Image from "next/image";
 import { authClient } from "@/lib/auth-client";
 import { loginSchema } from "@/lib/validations";
+import { trackLogin } from "@/lib/analytics";
 
 // ─── Shared classes ───────────────────────────────────────────────────────────
 
@@ -43,6 +44,7 @@ export function LoginForm() {
                 { email, password, callbackURL: "/dashboard" },
                 {
                     onSuccess: () => {
+                        trackLogin("email");
                         router.push("/dashboard");
                         router.refresh();
                     },
